@@ -2,21 +2,11 @@ import random
 import time
 import tkinter as tk
 
-from tkinter import messagebox, simpledialog
-from tkinter import filedialog
-from tkinter import ttk
+from tkinter import messagebox, simpledialog, filedialog, ttk
 from tkinter import font as tkfont
-
-# optional document parsing libraries (import if available)
-
-
-
-
 from PIL import Image, ImageTk
-from algorithms import dijkstra
+from algorithms import dijkstra, prim, greedy_scheduler, knapsack
 from algorithms.dijkstra_rebuild_path import rebuild_path as dijkstra_rebuild_path
-from algorithms import prim
-from algorithms import greedy_scheduler, knapsack
 from algorithms import naive as naive_mod, rabin_karp as rk_mod, kmp as kmp_mod
 
 
@@ -38,7 +28,8 @@ style.configure('TButton', padding=6)
 style.configure('TLabel', font=primary_font)
 style.configure('TFrame', background='grey')
 # status bar variable (updated by actions)
-status_var = tk.StringVar(value='Ready')
+page_location_var = tk.StringVar(value='Home')
+PAGE_BG = '#f7f7f7'
 
 # Pages: home, navigator, study, notes, info
 pages = {}
@@ -52,7 +43,13 @@ pages['navigator'] = navigator_frame
 pages['study'] = study_frame
 pages['notes'] = notes_frame
 pages['info'] = info_frame
+# global header (single page-location indicator for all pages)
+global_header = ttk.Frame(root)
+global_header.pack(fill='x')
+ttk.Label(global_header, textvariable=page_location_var, font=primary_font).pack(side='left', padx=10)
+ttk.Button(global_header, text='Home', command=lambda: show_page('home')).pack(side='right', padx=10)
 
+# Top right page indicator
 def show_page(name):
     for f in pages.values():
         try:
@@ -60,12 +57,13 @@ def show_page(name):
         except Exception:
             pass
     pages[name].pack(fill='both', expand=True)
-    status_var.set(f"Page: {name.title()}")
+    page_location_var.set(name.title())
 
 # Build home page (simple navigation)
 def build_home():
     for child in home_frame.winfo_children():
         child.destroy()
+    
     title = ttk.Label(home_frame, text="Titan Campus Algorithmic Assistant", font=title_font)
     title.pack(pady=20)
     subtitle = ttk.Label(home_frame, text="Select a module to begin", font=primary_font)
@@ -81,6 +79,9 @@ build_home()
 # show home page at startup
 show_page('home')
 
+header = ttk.Frame(study_frame)
+header.pack(fill='x', pady=6)
+ttk.Label(header, text='Campus Navigator', font=title_font).pack(side='left', padx=6)
 # load campus map image (keep same filename or update)
 try:
     campus_map = Image.open("campus_map.png")
@@ -89,16 +90,22 @@ try:
 except Exception:
     campus_bg = None
 
-# campus map canvas (inside navigator page)
-canvas = tk.Canvas(navigator_frame, width=850, height=600, bg="#ffffff", highlightthickness=0)
+# navigator header with page location (top-left)
+nav_header = ttk.Frame(navigator_frame)
+nav_header.grid(row=0, column=0, columnspan=2, sticky='ew', padx=10, pady=(8,0))
+ttk.Button(nav_header, text='Home', command=lambda: show_page('home')).pack(side='right')
+
+
+# campus map canvas (inside navigator page) - match page background
+canvas = tk.Canvas(navigator_frame, width=850, height=600, bg=PAGE_BG, highlightthickness=0)
 if campus_bg:
     canvas.create_image(0, 0, anchor="nw", image=campus_bg)
     canvas.image = campus_bg
-canvas.grid(row=0, column=0, padx=10, pady=10)
+canvas.grid(row=1, column=0, padx=10, pady=10)
 
 # right-side output / controls frame (inside navigator page)
 right_frame = ttk.Frame(navigator_frame)
-right_frame.grid(row=0, column=1, padx=10, sticky='n')
+right_frame.grid(row=1, column=1, padx=10, sticky='n')
 
 # top row controls (on right frame)
 control_frame_top = ttk.Frame(right_frame)
@@ -202,10 +209,6 @@ def place_node(event):
     text_id = canvas.create_text(x, y, text=pending_node, font=title_font, fill='white')
     nodes[pending_node] = (x, y)
     pending_node = None
-    try:
-        status_var.set(f"Placed node: {text_id}")
-    except Exception:
-        pass
 
 add_node_button.config(command=prepare_node_placement)
 canvas.bind("<Button-1>", place_node)
@@ -238,7 +241,7 @@ def connect_nodes():
     line_id = canvas.create_line(x1, y1, x2, y2, fill=color, width=3)
     label_text = f"{distance}/{time}"
     rect_w = max(30, len(label_text) * 7)
-    rect_id = canvas.create_rectangle(mid_x - rect_w/2, mid_y - 10, mid_x + rect_w/2, mid_y + 10, fill='white', outline='')
+    rect_id = canvas.create_rectangle(mid_x - rect_w/2, mid_y - 10, mid_x + rect_w/2, mid_y + 10, fill=PAGE_BG, outline='')
     label_id = canvas.create_text(mid_x, mid_y, text=label_text, fill="black", tags="edge_label")
 
     # store edge; undirected graph represented by storing once but we'll add both directions when building adjacency
@@ -532,8 +535,7 @@ def build_study_page():
         child.destroy()
     header = ttk.Frame(study_frame)
     header.pack(fill='x', pady=6)
-    ttk.Label(header, text='Study Planner', font=title_font).pack(side='left', padx=10)
-    ttk.Button(header, text='Home', command=lambda: show_page('home')).pack(side='right', padx=10)
+    ttk.Label(header, text='Study Planner', font=title_font).pack(side='left', padx=6)
 
     tasks = []  # local list of (name, time, value)
 
@@ -627,8 +629,7 @@ def build_notes_page():
         child.destroy()
     header = ttk.Frame(notes_frame)
     header.pack(fill='x', pady=6)
-    ttk.Label(header, text='Notes Search', font=title_font).pack(side='left', padx=10)
-    ttk.Button(header, text='Home', command=lambda: show_page('home')).pack(side='right', padx=10)
+    ttk.Label(header, text='Notes Search', font=title_font).pack(side='left', padx=6)
 
     content = {"text": ""}
 
@@ -732,8 +733,7 @@ def build_info_page():
         child.destroy()
     header = ttk.Frame(info_frame)
     header.pack(fill='x', pady=6)
-    ttk.Label(header, text='Algorithm Info', font=title_font).pack(side='left', padx=10)
-    ttk.Button(header, text='Home', command=lambda: show_page('home')).pack(side='right', padx=10)
+    ttk.Label(header, text='Algorithm Info', font=title_font).pack(side='left', padx=6)
     txt = tk.Text(info_frame, wrap='word')
     txt.pack(expand=True, fill='both', padx=10, pady=6)
     info = (
@@ -758,8 +758,6 @@ def build_info_page():
 # status bar at bottom
 status_frame = ttk.Frame(root)
 status_frame.pack(side='bottom', fill='x')
-status_label = ttk.Label(status_frame, textvariable=status_var, anchor='w', relief='sunken')
-status_label.pack(fill='x')
 
 # run loop
 root.mainloop()
