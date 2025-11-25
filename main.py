@@ -4,6 +4,14 @@ import tkinter as tk
 
 from tkinter import messagebox, simpledialog
 from tkinter import filedialog
+from tkinter import ttk
+from tkinter import font as tkfont
+
+# optional document parsing libraries (import if available)
+
+
+
+
 from PIL import Image, ImageTk
 from algorithms import dijkstra
 from algorithms.dijkstra_rebuild_path import rebuild_path as dijkstra_rebuild_path
@@ -17,6 +25,62 @@ root = tk.Tk()
 root.title("Titan Campus Algorithmic Assistant (TCAA)")
 root.geometry("1100x900")
 
+# UI styling
+style = ttk.Style(root)
+try:
+    style.theme_use('clam')
+except Exception:
+    pass
+primary_font = tkfont.Font(family='Ayuthaya', size=11)
+title_font = tkfont.Font(family='Ayuthaya', size=12, weight='bold')
+mono_font = tkfont.Font(family='Ayuthaya', size=10)
+style.configure('TButton', padding=6)
+style.configure('TLabel', font=primary_font)
+style.configure('TFrame', background='grey')
+# status bar variable (updated by actions)
+status_var = tk.StringVar(value='Ready')
+
+# Pages: home, navigator, study, notes, info
+pages = {}
+home_frame = ttk.Frame(root)
+navigator_frame = ttk.Frame(root)
+study_frame = ttk.Frame(root)
+notes_frame = ttk.Frame(root)
+info_frame = ttk.Frame(root)
+pages['home'] = home_frame
+pages['navigator'] = navigator_frame
+pages['study'] = study_frame
+pages['notes'] = notes_frame
+pages['info'] = info_frame
+
+def show_page(name):
+    for f in pages.values():
+        try:
+            f.pack_forget()
+        except Exception:
+            pass
+    pages[name].pack(fill='both', expand=True)
+    status_var.set(f"Page: {name.title()}")
+
+# Build home page (simple navigation)
+def build_home():
+    for child in home_frame.winfo_children():
+        child.destroy()
+    title = ttk.Label(home_frame, text="Titan Campus Algorithmic Assistant", font=title_font)
+    title.pack(pady=20)
+    subtitle = ttk.Label(home_frame, text="Select a module to begin", font=primary_font)
+    subtitle.pack(pady=8)
+    btn_frame = ttk.Frame(home_frame)
+    btn_frame.pack(pady=20)
+    ttk.Button(btn_frame, text='Campus Navigator', width=20, command=lambda: show_page('navigator')).grid(row=0, column=0, padx=8, pady=8)
+    ttk.Button(btn_frame, text='Study Planner', width=20, command=lambda: (build_study_page(), show_page('study'))).grid(row=0, column=1, padx=8, pady=8)
+    ttk.Button(btn_frame, text='Notes Search', width=20, command=lambda: (build_notes_page(), show_page('notes'))).grid(row=1, column=0, padx=8, pady=8)
+    ttk.Button(btn_frame, text='Algorithm Info', width=20, command=lambda: (build_info_page(), show_page('info'))).grid(row=1, column=1, padx=8, pady=8)
+
+build_home()
+# show home page at startup
+show_page('home')
+
 # load campus map image (keep same filename or update)
 try:
     campus_map = Image.open("campus_map.png")
@@ -25,83 +89,88 @@ try:
 except Exception:
     campus_bg = None
 
-# campus map canvas
-canvas = tk.Canvas(root, width=850, height=600, bg="white")
+# campus map canvas (inside navigator page)
+canvas = tk.Canvas(navigator_frame, width=850, height=600, bg="#ffffff", highlightthickness=0)
 if campus_bg:
     canvas.create_image(0, 0, anchor="nw", image=campus_bg)
     canvas.image = campus_bg
-canvas.pack(pady=10, side="left")
+canvas.grid(row=0, column=0, padx=10, pady=10)
 
-# right-side output / controls frame
-right_frame = tk.Frame(root)
-right_frame.pack(side="left", padx=10, fill="y")
+# right-side output / controls frame (inside navigator page)
+right_frame = ttk.Frame(navigator_frame)
+right_frame.grid(row=0, column=1, padx=10, sticky='n')
 
 # top row controls (on right frame)
-control_frame_top = tk.Frame(right_frame)
+control_frame_top = ttk.Frame(right_frame)
 control_frame_top.pack(pady=5, anchor="nw")
 
-tk.Label(control_frame_top, text="Building Name:").grid(row=0, column=0, sticky="w", padx=2)
-node_entry = tk.Entry(control_frame_top, width=20)
-node_entry.grid(row=0, column=1, padx=2)
+ttk.Label(control_frame_top, text="Building Name:").grid(row=0, column=0, sticky="w", padx=2)
+node_entry = ttk.Entry(control_frame_top, width=20)
+node_entry.grid(row=0, column=1, padx=6)
 
-add_node_button = tk.Button(control_frame_top, text="Add Node")
-add_node_button.grid(row=0, column=2, padx=5)
+add_node_button = ttk.Button(control_frame_top, text="Add Node")
+add_node_button.grid(row=0, column=2, padx=6)
 
-connect_button = tk.Button(control_frame_top, text="Connect Nodes")
-connect_button.grid(row=0, column=3, padx=5)
+connect_button = ttk.Button(control_frame_top, text="Connect Nodes")
+connect_button.grid(row=0, column=3, padx=6)
 
 # middle controls: start/end selection (keep entries for familiarity)
-control_frame_middle = tk.Frame(right_frame)
+control_frame_middle = ttk.Frame(right_frame)
 control_frame_middle.pack(pady=5, anchor="nw")
 
-tk.Label(control_frame_middle, text="Start:").grid(row=0, column=0, padx=2, sticky="w")
-traversal_start = tk.Entry(control_frame_middle, width=12)
-traversal_start.grid(row=0, column=1, padx=2)
+ttk.Label(control_frame_middle, text="Start:").grid(row=0, column=0, padx=2, sticky="w")
+traversal_start = ttk.Entry(control_frame_middle, width=12)
+traversal_start.grid(row=0, column=1, padx=6)
 
-tk.Label(control_frame_middle, text="End:").grid(row=0, column=2, padx=2, sticky="w")
-end_entry = tk.Entry(control_frame_middle, width=12)
-end_entry.grid(row=0, column=3, padx=2)
+ttk.Label(control_frame_middle, text="End:").grid(row=0, column=2, padx=2, sticky="w")
+end_entry = ttk.Entry(control_frame_middle, width=12)
+end_entry.grid(row=0, column=3, padx=6)
 
-tk.Label(control_frame_middle, text="Goal (for set):").grid(row=1, column=0, padx=2, sticky="w")
-traversal_goal = tk.Entry(control_frame_middle, width=12)
-traversal_goal.grid(row=1, column=1, padx=2)
+ttk.Label(control_frame_middle, text="Goal:").grid(row=1, column=0, padx=2, sticky="w")
+traversal_goal = ttk.Entry(control_frame_middle, width=12)
+traversal_goal.grid(row=1, column=1, padx=6)
 
-goal_button = tk.Button(control_frame_middle, text="Set Goal")
-goal_button.grid(row=1, column=3, padx=2)
+goal_button = ttk.Button(control_frame_middle, text="Set Goal")
+goal_button.grid(row=1, column=3, padx=6)
 
 accessible_only_var = tk.BooleanVar()
-accessible_check = tk.Checkbutton(right_frame, text="Accessible Only", variable=accessible_only_var)
+accessible_check = ttk.Checkbutton(right_frame, text="Accessible Only", variable=accessible_only_var)
 accessible_check.pack(pady=5, anchor="nw")
 
 # bottom row buttons for algorithms
-control_frame_bottom = tk.Frame(right_frame)
+control_frame_bottom = ttk.Frame(right_frame)
 control_frame_bottom.pack(pady=8, anchor="nw")
 
-bfs_button = tk.Button(control_frame_bottom, text="Run BFS")
-bfs_button.grid(row=0, column=0, padx=3, pady=2)
+bfs_button = ttk.Button(control_frame_bottom, text="Run BFS")
+bfs_button.grid(row=0, column=0, padx=6, pady=4)
 
-dfs_button = tk.Button(control_frame_bottom, text="Run DFS")
-dfs_button.grid(row=0, column=1, padx=3, pady=2)
+dfs_button = ttk.Button(control_frame_bottom, text="Run DFS")
+dfs_button.grid(row=0, column=1, padx=6, pady=4)
 
-dijkstra_button = tk.Button(control_frame_bottom, text="Run Dijkstra")
-dijkstra_button.grid(row=0, column=2, padx=3, pady=2)
+dijkstra_button = ttk.Button(control_frame_bottom, text="Run Dijkstra")
+dijkstra_button.grid(row=0, column=2, padx=6, pady=4)
 
-prim_button = tk.Button(control_frame_bottom, text="Run Prim's MST")
-prim_button.grid(row=0, column=3, padx=3, pady=2)
+prim_button = ttk.Button(control_frame_bottom, text="Run Prim's MST")
+prim_button.grid(row=0, column=3, padx=6, pady=4)
 
-randomize_button = tk.Button(control_frame_bottom, text="Randomize Weights")
-randomize_button.grid(row=0, column=4, padx=3, pady=2)
+randomize_button = ttk.Button(control_frame_bottom, text="Randomize Weights")
+randomize_button.grid(row=0, column=4, padx=6, pady=4)
 
 # info / output box
-output_label = tk.Label(right_frame, text="Output")
+output_label = ttk.Label(right_frame, text="Output")
 output_label.pack(anchor="nw")
-output_box = tk.Text(right_frame, width=40, height=25)
-output_box.pack(pady=5, anchor="nw")
+output_frame = ttk.Frame(right_frame)
+output_frame.pack(pady=5, anchor="nw")
+output_box = tk.Text(output_frame, width=40, height=18, font=mono_font, wrap='word')
+output_scroll = ttk.Scrollbar(output_frame, orient='vertical', command=output_box.yview)
+output_box['yscrollcommand'] = output_scroll.set
+output_box.grid(row=0, column=0)
+output_scroll.grid(row=0, column=1, sticky='ns')
 
 # dictionary/list to store nodes/edges
 # nodes[name] = (x,y)
 nodes = {}
-# edges: [start, end, distance, time, accessible(bool), open_(bool), line_id, label_id]
+# edges: [start, end, distance, time, accessible(bool), open_(bool), line_id, label_id, rect_id]
 edges = []
 pending_node = None
 
@@ -124,13 +193,19 @@ def place_node(event):
     global pending_node
     if not pending_node:
         return
-
     x, y = event.x, event.y
-    radius = 18
-    oval = canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill="lightblue", outline="black", width=2)
-    text_id = canvas.create_text(x, y, text=pending_node)
+    radius = 20
+    # faux drop shadow for depth
+    canvas.create_oval(x - radius + 3, y - radius + 3, x + radius + 3, y + radius + 3, fill='#bfbfbf', outline='')
+    oval = canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill="#4aa3e0", outline="#1f68a6", width=2)
+    # label text with readable font and contrast
+    text_id = canvas.create_text(x, y, text=pending_node, font=title_font, fill='white')
     nodes[pending_node] = (x, y)
     pending_node = None
+    try:
+        status_var.set(f"Placed node: {text_id}")
+    except Exception:
+        pass
 
 add_node_button.config(command=prepare_node_placement)
 canvas.bind("<Button-1>", place_node)
@@ -160,11 +235,14 @@ def connect_nodes():
     mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
     color = "black" if accessible else "orange"
 
-    line_id = canvas.create_line(x1, y1, x2, y2, fill=color, width=2)
-    label_id = canvas.create_text(mid_x, mid_y, text=f"{distance}/{time}", fill="black", tags="edge_label")
+    line_id = canvas.create_line(x1, y1, x2, y2, fill=color, width=3)
+    label_text = f"{distance}/{time}"
+    rect_w = max(30, len(label_text) * 7)
+    rect_id = canvas.create_rectangle(mid_x - rect_w/2, mid_y - 10, mid_x + rect_w/2, mid_y + 10, fill='white', outline='')
+    label_id = canvas.create_text(mid_x, mid_y, text=label_text, fill="black", tags="edge_label")
 
     # store edge; undirected graph represented by storing once but we'll add both directions when building adjacency
-    edges.append([start, end, int(distance), int(time), bool(accessible), True, line_id, label_id])
+    edges.append([start, end, int(distance), int(time), bool(accessible), True, line_id, label_id, rect_id])
 
     messagebox.showinfo("Edge Created", f"Edge from {start} to {end} created successfully.")
 
@@ -175,7 +253,8 @@ def toggle_edge(event):
     clicked_items = canvas.find_overlapping(event.x - 2, event.y - 2, event.x + 2, event.y + 2)
     for item in clicked_items:
         for edge in edges:
-            if len(edge) >= 8 and edge[6] == item:
+            # item could be the line, the text label, or the label background rect
+            if len(edge) >= 9 and (edge[6] == item or edge[7] == item or edge[8] == item):
                 edge[5] = not edge[5]  # open/closed
                 new_color = "red" if not edge[5] else ("black" if edge[4] else "orange")
                 canvas.itemconfig(edge[6], fill=new_color)
@@ -193,7 +272,9 @@ def build_graph(accessible_only=False):
     weight used = distance (you can change to time if preferred)
     """
     graph = {node: [] for node in nodes}
-    for start, end, distance, time_cost, accessible, open_, line_id, label_id in edges:
+    for edge in edges:
+        # edge may contain an extra rect_id at the end for label background
+        start, end, distance, time_cost, accessible, open_, line_id, label_id = edge[:8]
         if not open_:
             continue
         if accessible_only and not accessible:
@@ -261,7 +342,7 @@ def visualize(path, visited, highlight_color="green", line_width=3):
             continue
         x, y = nodes[node]
         radius = 18
-        canvas.create_oval(x - radius, y - radius, x + radius, y + radius, outline="gray", width=2, tags="traversal")
+        canvas.create_oval(x - radius, y - radius, x + radius, y + radius, outline=highlight_color, width=3, tags="traversal")
 
     # draw path edges
     if path:
@@ -402,7 +483,9 @@ def randomize_weights():
         edge[3] = random.randint(1, 20)  # time
 
     # update edge labels
-    for start, end, distance, time_cost, accessible, open_, line_id, label_id in edges:
+    for edge in edges:
+        # support optional rect_id
+        start, end, distance, time_cost, accessible, open_, line_id, label_id = edge[:8]
         if label_id:
             canvas.itemconfig(label_id, text=f"{distance}/{time_cost}")
     messagebox.showinfo("Randomize", "Edge distances and times have been randomized.")
@@ -423,46 +506,54 @@ goal_button.config(command=set_goal)
 def clear_output():
     output_box.delete("1.0", tk.END)
 
-clear_button = tk.Button(right_frame, text="Clear Output", command=clear_output)
+clear_button = ttk.Button(right_frame, text="Clear Output", command=clear_output)
 clear_button.pack(anchor="nw", pady=6)
 
 # Module launcher buttons
-module_frame = tk.Frame(right_frame)
+module_frame = ttk.Frame(right_frame)
 module_frame.pack(pady=6, anchor="nw")
 
-study_button = tk.Button(module_frame, text="Study Planner")
-study_button.grid(row=0, column=0, padx=3)
+study_button = ttk.Button(module_frame, text="Study Planner", command=lambda: (build_study_page(), show_page('study')))
+study_button.grid(row=0, column=0, padx=6)
 
-notes_button = tk.Button(module_frame, text="Notes Search")
-notes_button.grid(row=0, column=1, padx=3)
+notes_button = ttk.Button(module_frame, text="Notes Search", command=lambda: (build_notes_page(), show_page('notes')))
+notes_button.grid(row=0, column=1, padx=6)
 
-info_button = tk.Button(module_frame, text="Algorithm Info")
-info_button.grid(row=0, column=2, padx=3)
+info_button = ttk.Button(module_frame, text="Algorithm Info", command=lambda: (build_info_page(), show_page('info')))
+info_button.grid(row=0, column=2, padx=6)
 
-def open_study_planner():
-    win = tk.Toplevel(root)
-    win.title("Study Planner")
-    win.geometry("600x500")
+study_built = False
+def build_study_page():
+    global study_built
+    if study_built:
+        return
+    study_built = True
+    for child in study_frame.winfo_children():
+        child.destroy()
+    header = ttk.Frame(study_frame)
+    header.pack(fill='x', pady=6)
+    ttk.Label(header, text='Study Planner', font=title_font).pack(side='left', padx=10)
+    ttk.Button(header, text='Home', command=lambda: show_page('home')).pack(side='right', padx=10)
 
     tasks = []  # local list of (name, time, value)
 
     # inputs
-    input_frame = tk.Frame(win)
+    input_frame = ttk.Frame(study_frame)
     input_frame.pack(pady=6)
 
-    tk.Label(input_frame, text="Task Name:").grid(row=0, column=0)
-    task_name_entry = tk.Entry(input_frame, width=20)
+    ttk.Label(input_frame, text="Task Name:").grid(row=0, column=0)
+    task_name_entry = ttk.Entry(input_frame, width=20)
     task_name_entry.grid(row=0, column=1)
 
-    tk.Label(input_frame, text="Time:").grid(row=1, column=0)
-    task_time_entry = tk.Entry(input_frame, width=8)
+    ttk.Label(input_frame, text="Time:").grid(row=1, column=0)
+    task_time_entry = ttk.Entry(input_frame, width=8)
     task_time_entry.grid(row=1, column=1)
 
-    tk.Label(input_frame, text="Value:").grid(row=2, column=0)
-    task_value_entry = tk.Entry(input_frame, width=8)
+    ttk.Label(input_frame, text="Value:").grid(row=2, column=0)
+    task_value_entry = ttk.Entry(input_frame, width=8)
     task_value_entry.grid(row=2, column=1)
 
-    listbox = tk.Listbox(win, width=60)
+    listbox = tk.Listbox(study_frame, width=60)
     listbox.pack(pady=6)
 
     def add_task():
@@ -482,17 +573,17 @@ def open_study_planner():
         task_time_entry.delete(0, tk.END)
         task_value_entry.delete(0, tk.END)
 
-    add_btn = tk.Button(input_frame, text="Add Task", command=add_task)
+    add_btn = ttk.Button(input_frame, text="Add Task", command=add_task)
     add_btn.grid(row=3, column=0, columnspan=2, pady=4)
 
     # available time
-    avail_frame = tk.Frame(win)
+    avail_frame = ttk.Frame(study_frame)
     avail_frame.pack(pady=6)
-    tk.Label(avail_frame, text="Available Time:").grid(row=0, column=0)
-    avail_entry = tk.Entry(avail_frame, width=10)
+    ttk.Label(avail_frame, text="Available Time:").grid(row=0, column=0)
+    avail_entry = ttk.Entry(avail_frame, width=10)
     avail_entry.grid(row=0, column=1)
 
-    output_text = tk.Text(win, height=10, width=70)
+    output_text = tk.Text(study_frame, height=10, width=70)
     output_text.pack(pady=6)
 
     def run_greedy():
@@ -521,15 +612,23 @@ def open_study_planner():
             output_text.insert(tk.END, f"  {name} | time:{t} value:{v}\n")
         output_text.insert(tk.END, f"Total Time: {total_time}  Total Value: {total_value}\n")
 
-    btn_frame = tk.Frame(win)
+    btn_frame = ttk.Frame(study_frame)
     btn_frame.pack(pady=6)
-    tk.Button(btn_frame, text="Run Greedy", command=run_greedy).grid(row=0, column=0, padx=6)
-    tk.Button(btn_frame, text="Run DP", command=run_dp).grid(row=0, column=1, padx=6)
+    ttk.Button(btn_frame, text="Run Greedy", command=run_greedy).grid(row=0, column=0, padx=6)
+    ttk.Button(btn_frame, text="Run DP", command=run_dp).grid(row=0, column=1, padx=6)
 
-def open_notes_search():
-    win = tk.Toplevel(root)
-    win.title("Notes Search")
-    win.geometry("700x600")
+notes_built = False
+def build_notes_page():
+    global notes_built
+    if notes_built:
+        return
+    notes_built = True
+    for child in notes_frame.winfo_children():
+        child.destroy()
+    header = ttk.Frame(notes_frame)
+    header.pack(fill='x', pady=6)
+    ttk.Label(header, text='Notes Search', font=title_font).pack(side='left', padx=10)
+    ttk.Button(header, text='Home', command=lambda: show_page('home')).pack(side='right', padx=10)
 
     content = {"text": ""}
 
@@ -574,22 +673,22 @@ def open_notes_search():
         content['text'] = text
         messagebox.showinfo("Loaded", f"Loaded file: {fname}")
 
-    tk.Button(win, text="Load File", command=load_file).pack(pady=6)
+    ttk.Button(notes_frame, text="Load File", command=load_file).pack(pady=6)
 
     # pattern input
-    pat_frame = tk.Frame(win)
+    pat_frame = ttk.Frame(notes_frame)
     pat_frame.pack(pady=6)
-    tk.Label(pat_frame, text="Pattern:").grid(row=0, column=0)
-    pattern_entry = tk.Entry(pat_frame, width=40)
+    ttk.Label(pat_frame, text="Pattern:").grid(row=0, column=0)
+    pattern_entry = ttk.Entry(pat_frame, width=40)
     pattern_entry.grid(row=0, column=1)
 
     alg_var = tk.StringVar(value="ALL")
-    rb_frame = tk.Frame(win)
+    rb_frame = ttk.Frame(notes_frame)
     rb_frame.pack(pady=4)
     for val in ["Naive", "Rabin-Karp", "KMP", "ALL"]:
-        tk.Radiobutton(rb_frame, text=val, variable=alg_var, value=val).pack(side='left', padx=6)
+        ttk.Radiobutton(rb_frame, text=val, variable=alg_var, value=val).pack(side='left', padx=6)
 
-    output = tk.Text(win, height=20, width=80)
+    output = tk.Text(notes_frame, height=20, width=80)
     output.pack(pady=6)
 
     def run_search():
@@ -610,7 +709,6 @@ def open_notes_search():
             try:
                 res = func(txt, pat)
             except TypeError:
-                # some functions have different signatures; try wrapper
                 res = func(txt, pat)
             t1 = time.perf_counter()
             output.insert(tk.END, f"{name}: found {len(res)} matches; indices sample: {res[:10]}\nTime: {t1-t0:.6f}s\n\n")
@@ -622,14 +720,22 @@ def open_notes_search():
         if choice == 'KMP' or choice == 'ALL':
             run_and_report('KMP', kmp_mod.kmp_search)
 
-    tk.Button(win, text="Run Search", command=run_search).pack(pady=6)
+    ttk.Button(notes_frame, text="Run Search", command=run_search).pack(pady=6)
 
-def open_info_window():
-    win = tk.Toplevel(root)
-    win.title("Algorithm Info")
-    win.geometry("600x500")
-    txt = tk.Text(win, wrap='word')
-    txt.pack(expand=True, fill='both')
+info_built = False
+def build_info_page():
+    global info_built
+    if info_built:
+        return
+    info_built = True
+    for child in info_frame.winfo_children():
+        child.destroy()
+    header = ttk.Frame(info_frame)
+    header.pack(fill='x', pady=6)
+    ttk.Label(header, text='Algorithm Info', font=title_font).pack(side='left', padx=10)
+    ttk.Button(header, text='Home', command=lambda: show_page('home')).pack(side='right', padx=10)
+    txt = tk.Text(info_frame, wrap='word')
+    txt.pack(expand=True, fill='both', padx=10, pady=6)
     info = (
         "Algorithm Complexities:\n"
         "BFS/DFS: O(V+E)\n"
@@ -646,9 +752,14 @@ def open_info_window():
     )
     txt.insert('1.0', info)
 
-study_button.config(command=open_study_planner)
-notes_button.config(command=open_notes_search)
-info_button.config(command=open_info_window)
+# Buttons already configured to use page builders above; ensure backward compatibility variables removed.
+# (previous Toplevel-based functions were replaced with in-page builders.)
+
+# status bar at bottom
+status_frame = ttk.Frame(root)
+status_frame.pack(side='bottom', fill='x')
+status_label = ttk.Label(status_frame, textvariable=status_var, anchor='w', relief='sunken')
+status_label.pack(fill='x')
 
 # run loop
 root.mainloop()
