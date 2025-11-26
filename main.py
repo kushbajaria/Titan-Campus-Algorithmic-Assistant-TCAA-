@@ -38,16 +38,18 @@ navigator_frame = ttk.Frame(root)
 study_frame = ttk.Frame(root)
 notes_frame = ttk.Frame(root)
 info_frame = ttk.Frame(root)
-pages['home'] = home_frame
-pages['navigator'] = navigator_frame
-pages['study'] = study_frame
-pages['notes'] = notes_frame
-pages['info'] = info_frame
+pages['Home'] = home_frame
+pages['Campus Navigator'] = navigator_frame
+pages['Study Planner'] = study_frame
+pages['Notes Search'] = notes_frame
+pages['Algorithm Info'] = info_frame
 # global header (single page-location indicator for all pages)
 global_header = ttk.Frame(root)
 global_header.pack(fill='x')
 ttk.Label(global_header, textvariable=page_location_var, font=primary_font).pack(side='left', padx=10)
-ttk.Button(global_header, text='Home', command=lambda: show_page('home')).pack(side='right', padx=10)
+# right-side header button (switches between Home and Quit depending on page)
+header_right_btn = ttk.Button(global_header, text='Home', command=lambda: show_page('Home'))
+header_right_btn.pack(side='right', padx=10)
 
 # Top right page indicator
 def show_page(name):
@@ -58,6 +60,14 @@ def show_page(name):
             pass
     pages[name].pack(fill='both', expand=True)
     page_location_var.set(name.title())
+    # update header button: show Quit when on Home, otherwise show Home
+    try:
+        if name == 'Home':
+            header_right_btn.config(text='Quit', command=root.destroy)
+        else:
+            header_right_btn.config(text='Home', command=lambda: show_page('Home'))
+    except NameError:
+        pass
 
 # Build home page (simple navigation)
 def build_home():
@@ -70,18 +80,14 @@ def build_home():
     subtitle.pack(pady=8)
     btn_frame = ttk.Frame(home_frame)
     btn_frame.pack(pady=20)
-    ttk.Button(btn_frame, text='Campus Navigator', width=20, command=lambda: show_page('navigator')).grid(row=0, column=0, padx=8, pady=8)
-    ttk.Button(btn_frame, text='Study Planner', width=20, command=lambda: (build_study_page(), show_page('study'))).grid(row=0, column=1, padx=8, pady=8)
-    ttk.Button(btn_frame, text='Notes Search', width=20, command=lambda: (build_notes_page(), show_page('notes'))).grid(row=1, column=0, padx=8, pady=8)
-    ttk.Button(btn_frame, text='Algorithm Info', width=20, command=lambda: (build_info_page(), show_page('info'))).grid(row=1, column=1, padx=8, pady=8)
+    ttk.Button(btn_frame, text='Campus Navigator', width=20, command=lambda: show_page('Campus Navigator')).grid(row=0, column=0, padx=8, pady=8)
+    ttk.Button(btn_frame, text='Study Planner', width=20, command=lambda: (build_study_page(), show_page('Study Planner'))).grid(row=0, column=1, padx=8, pady=8)
+    ttk.Button(btn_frame, text='Notes Search', width=20, command=lambda: (build_notes_page(), show_page('Notes Search'))).grid(row=1, column=0, padx=8, pady=8)
+    ttk.Button(btn_frame, text='Algorithm Info', width=20, command=lambda: (build_info_page(), show_page('Algorithm Info'))).grid(row=1, column=1, padx=8, pady=8)
 
 build_home()
 # show home page at startup
-show_page('home')
-
-header = ttk.Frame(study_frame)
-header.pack(fill='x', pady=6)
-ttk.Label(header, text='Campus Navigator', font=title_font).pack(side='left', padx=6)
+show_page('Home')
 # load campus map image (keep same filename or update)
 try:
     campus_map = Image.open("campus_map.png")
@@ -89,12 +95,6 @@ try:
     campus_bg = ImageTk.PhotoImage(campus_map)
 except Exception:
     campus_bg = None
-
-# navigator header with page location (top-left)
-nav_header = ttk.Frame(navigator_frame)
-nav_header.grid(row=0, column=0, columnspan=2, sticky='ew', padx=10, pady=(8,0))
-ttk.Button(nav_header, text='Home', command=lambda: show_page('home')).pack(side='right')
-
 
 # campus map canvas (inside navigator page) - match page background
 canvas = tk.Canvas(navigator_frame, width=850, height=600, bg=PAGE_BG, highlightthickness=0)
@@ -512,20 +512,8 @@ def clear_output():
 clear_button = ttk.Button(right_frame, text="Clear Output", command=clear_output)
 clear_button.pack(anchor="nw", pady=6)
 
-# Module launcher buttons
-module_frame = ttk.Frame(right_frame)
-module_frame.pack(pady=6, anchor="nw")
-
-study_button = ttk.Button(module_frame, text="Study Planner", command=lambda: (build_study_page(), show_page('study')))
-study_button.grid(row=0, column=0, padx=6)
-
-notes_button = ttk.Button(module_frame, text="Notes Search", command=lambda: (build_notes_page(), show_page('notes')))
-notes_button.grid(row=0, column=1, padx=6)
-
-info_button = ttk.Button(module_frame, text="Algorithm Info", command=lambda: (build_info_page(), show_page('info')))
-info_button.grid(row=0, column=2, padx=6)
-
 study_built = False
+
 def build_study_page():
     global study_built
     if study_built:
@@ -533,9 +521,6 @@ def build_study_page():
     study_built = True
     for child in study_frame.winfo_children():
         child.destroy()
-    header = ttk.Frame(study_frame)
-    header.pack(fill='x', pady=6)
-    ttk.Label(header, text='Study Planner', font=title_font).pack(side='left', padx=6)
 
     tasks = []  # local list of (name, time, value)
 
@@ -627,9 +612,6 @@ def build_notes_page():
     notes_built = True
     for child in notes_frame.winfo_children():
         child.destroy()
-    header = ttk.Frame(notes_frame)
-    header.pack(fill='x', pady=6)
-    ttk.Label(header, text='Notes Search', font=title_font).pack(side='left', padx=6)
 
     content = {"text": ""}
 
@@ -731,9 +713,6 @@ def build_info_page():
     info_built = True
     for child in info_frame.winfo_children():
         child.destroy()
-    header = ttk.Frame(info_frame)
-    header.pack(fill='x', pady=6)
-    ttk.Label(header, text='Algorithm Info', font=title_font).pack(side='left', padx=6)
     txt = tk.Text(info_frame, wrap='word')
     txt.pack(expand=True, fill='both', padx=10, pady=6)
     info = (
