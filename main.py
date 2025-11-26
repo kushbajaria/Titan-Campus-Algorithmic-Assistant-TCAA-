@@ -121,7 +121,7 @@ add_node_button.grid(row=0, column=2, padx=6)
 connect_button = ttk.Button(control_frame_top, text="Connect Nodes")
 connect_button.grid(row=0, column=3, padx=6)
 
-# middle controls: start/end selection (keep entries for familiarity)
+# middle controls: start/end selection
 control_frame_middle = ttk.Frame(right_frame)
 control_frame_middle.pack(pady=5, anchor="nw")
 
@@ -177,7 +177,7 @@ output_scroll.grid(row=0, column=1, sticky='ns')
 # dictionary/list to store nodes/edges
 # nodes[name] = (x,y)
 nodes = {}
-# edges: [start, end, distance, time, accessible(bool), open_(bool), line_id, label_id, rect_id]
+# edges
 edges = []
 pending_node = None
 
@@ -202,7 +202,6 @@ def place_node(event):
         return
     x, y = event.x, event.y
     radius = 20
-    # faux drop shadow for depth
     canvas.create_oval(x - radius + 3, y - radius + 3, x + radius + 3, y + radius + 3, fill='#bfbfbf', outline='')
     oval = canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill="#4aa3e0", outline="#1f68a6", width=2)
     # label text with readable font and contrast
@@ -244,7 +243,6 @@ def connect_nodes():
     rect_id = canvas.create_rectangle(mid_x - rect_w/2, mid_y - 10, mid_x + rect_w/2, mid_y + 10, fill=PAGE_BG, outline='')
     label_id = canvas.create_text(mid_x, mid_y, text=label_text, fill="black", tags="edge_label")
 
-    # store edge; undirected graph represented by storing once but we'll add both directions when building adjacency
     edges.append([start, end, int(distance), int(time), bool(accessible), True, line_id, label_id, rect_id])
 
     messagebox.showinfo("Edge Created", f"Edge from {start} to {end} created successfully.")
@@ -256,7 +254,6 @@ def toggle_edge(event):
     clicked_items = canvas.find_overlapping(event.x - 2, event.y - 2, event.x + 2, event.y + 2)
     for item in clicked_items:
         for edge in edges:
-            # item could be the line, the text label, or the label background rect
             if len(edge) >= 9 and (edge[6] == item or edge[7] == item or edge[8] == item):
                 edge[5] = not edge[5]  # open/closed
                 new_color = "red" if not edge[5] else ("black" if edge[4] else "orange")
@@ -267,7 +264,6 @@ def toggle_edge(event):
 
 canvas.bind("<Button-3>", toggle_edge)
 
-# build weighted adjacency list
 def build_graph(accessible_only=False):
     """
     Returns graph in format:
@@ -276,18 +272,15 @@ def build_graph(accessible_only=False):
     """
     graph = {node: [] for node in nodes}
     for edge in edges:
-        # edge may contain an extra rect_id at the end for label background
         start, end, distance, time_cost, accessible, open_, line_id, label_id = edge[:8]
         if not open_:
             continue
         if accessible_only and not accessible:
             continue
-        # undirected: add both directions
         graph[start].append((end, distance))
         graph[end].append((start, distance))
     return graph
 
-# BFS (fewest hops) - works with weighted adjacency list (ignores weights)
 def bfs(start, goal, accessible_only=False):
     graph = build_graph(accessible_only)
     visited = set()
@@ -311,7 +304,6 @@ def bfs(start, goal, accessible_only=False):
 
     return None, traversal_order
 
-# DFS traversal (iterative) - works with weighted adjacency list (ignores weights)
 def dfs(start, goal, accessible_only=False):
     graph = build_graph(accessible_only)
     visited = set()
@@ -357,7 +349,6 @@ def visualize(path, visited, highlight_color="green", line_width=3):
                 x2, y2 = nodes[b]
                 canvas.create_line(x1, y1, x2, y2, fill=highlight_color, width=line_width, tags="traversal")
 
-# Bind and handlers for buttons
 def run_bfs():
     start = traversal_start.get().strip()
     goal = traversal_goal.get().strip()
@@ -420,7 +411,6 @@ def run_dijkstra():
     try:
         path = dijkstra_rebuild_path(parents, goal)
     except Exception:
-        # fall back to reconstruct manually
         path = []
         cur = goal
         while cur is not None:
@@ -445,7 +435,6 @@ def run_prim():
     graph = build_graph(accessible_only_var.get())
     try:
         res = prim(graph, start)
-        # handle prim returning (mst_edges, cost) or (mst_edges, cost, disconnected)
         if len(res) == 2:
             mst_edges, total_cost = res
             disconnected = (len(mst_edges) == 0 and len(nodes) > 0)
@@ -487,7 +476,6 @@ def randomize_weights():
 
     # update edge labels
     for edge in edges:
-        # support optional rect_id
         start, end, distance, time_cost, accessible, open_, line_id, label_id = edge[:8]
         if label_id:
             canvas.itemconfig(label_id, text=f"{distance}/{time_cost}")
@@ -505,15 +493,14 @@ def set_goal():
 
 goal_button.config(command=set_goal)
 
-# helper: clear output
 def clear_output():
     output_box.delete("1.0", tk.END)
 
 clear_button = ttk.Button(right_frame, text="Clear Output", command=clear_output)
 clear_button.pack(anchor="nw", pady=6)
 
+# Study Planner Page
 study_built = False
-
 def build_study_page():
     global study_built
     if study_built:
@@ -522,9 +509,9 @@ def build_study_page():
     for child in study_frame.winfo_children():
         child.destroy()
 
-    tasks = []  # local list of (name, time, value)
+    tasks = []
 
-    # inputs
+    # user input
     input_frame = ttk.Frame(study_frame)
     input_frame.pack(pady=6, anchor='center')
 
@@ -604,6 +591,7 @@ def build_study_page():
     ttk.Button(btn_frame, text="Run Greedy", command=run_greedy).grid(row=0, column=0, padx=6)
     ttk.Button(btn_frame, text="Run DP", command=run_dp).grid(row=0, column=1, padx=6)
 
+# Notes Search Page
 notes_built = False
 def build_notes_page():
     global notes_built
@@ -612,7 +600,8 @@ def build_notes_page():
     notes_built = True
     for child in notes_frame.winfo_children():
         child.destroy()
-    # large editable text area for document content or user input
+
+    # large editable text area for document text or user input
     doc_label = ttk.Label(notes_frame, text="Inputted Text:")
     doc_label.pack(padx=6, pady=(6,0), anchor='center')
     doc_text = tk.Text(notes_frame, height=22, width=140, wrap='word')
@@ -620,6 +609,7 @@ def build_notes_page():
 
     content = {"text": ""}
 
+    # Load file through OS
     def load_file():
         fname = filedialog.askopenfilename(filetypes=[("All", "*.*"), ("PDF", "*.pdf"), ("DOCX", "*.docx"), ("Text", "*.txt")])
         if not fname:
@@ -681,11 +671,11 @@ def build_notes_page():
     for val in ["Naive", "Rabin-Karp", "KMP", "ALL"]:
         ttk.Radiobutton(rb_frame, text=val, variable=alg_var, value=val).pack(side='left', padx=6)
 
-    # Run button
+    # run button
     run_btn = ttk.Button(notes_frame, text="Run Search")
     run_btn.pack(pady=6, padx=6, anchor='center')
 
-    # results text box (separate from document input)
+    # results text box (separate from the document input text box)
     res_label = ttk.Label(notes_frame, text="Results:")
     res_label.pack(padx=6, anchor='center')
     results_text = tk.Text(notes_frame, height=16, width=100, wrap='word')
@@ -722,6 +712,7 @@ def build_notes_page():
 
     run_btn.config(command=run_search)
 
+# Algorithm Info Page
 info_built = False
 def build_info_page():
     global info_built
@@ -750,12 +741,9 @@ def build_info_page():
     )
     txt.insert('1.0', info)
 
-# Buttons already configured to use page builders above; ensure backward compatibility variables removed.
-# (previous Toplevel-based functions were replaced with in-page builders.)
-
 # status bar at bottom
 status_frame = ttk.Frame(root)
 status_frame.pack(side='bottom', fill='x')
 
-# run loop
+# run main loop
 root.mainloop()
