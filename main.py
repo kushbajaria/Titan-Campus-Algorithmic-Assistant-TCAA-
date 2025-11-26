@@ -75,11 +75,11 @@ def build_home():
         child.destroy()
     
     title = ttk.Label(home_frame, text="Titan Campus Algorithmic Assistant", font=title_font)
-    title.pack(pady=20)
+    title.pack(pady=20, anchor='center')
     subtitle = ttk.Label(home_frame, text="Select a module to begin", font=primary_font)
-    subtitle.pack(pady=8)
+    subtitle.pack(pady=8, anchor='center')
     btn_frame = ttk.Frame(home_frame)
-    btn_frame.pack(pady=20)
+    btn_frame.pack(pady=20, anchor='center')
     ttk.Button(btn_frame, text='Campus Navigator', width=20, command=lambda: show_page('Campus Navigator')).grid(row=0, column=0, padx=8, pady=8)
     ttk.Button(btn_frame, text='Study Planner', width=20, command=lambda: (build_study_page(), show_page('Study Planner'))).grid(row=0, column=1, padx=8, pady=8)
     ttk.Button(btn_frame, text='Notes Search', width=20, command=lambda: (build_notes_page(), show_page('Notes Search'))).grid(row=1, column=0, padx=8, pady=8)
@@ -526,7 +526,7 @@ def build_study_page():
 
     # inputs
     input_frame = ttk.Frame(study_frame)
-    input_frame.pack(pady=6)
+    input_frame.pack(pady=6, anchor='center')
 
     ttk.Label(input_frame, text="Task Name:").grid(row=0, column=0)
     task_name_entry = ttk.Entry(input_frame, width=20)
@@ -541,7 +541,7 @@ def build_study_page():
     task_value_entry.grid(row=2, column=1)
 
     listbox = tk.Listbox(study_frame, width=60)
-    listbox.pack(pady=6)
+    listbox.pack(pady=6, anchor='center')
 
     def add_task():
         name = task_name_entry.get().strip()
@@ -565,13 +565,13 @@ def build_study_page():
 
     # available time
     avail_frame = ttk.Frame(study_frame)
-    avail_frame.pack(pady=6)
+    avail_frame.pack(pady=6, anchor='center')
     ttk.Label(avail_frame, text="Available Time:").grid(row=0, column=0)
     avail_entry = ttk.Entry(avail_frame, width=10)
     avail_entry.grid(row=0, column=1)
 
     output_text = tk.Text(study_frame, height=10, width=70)
-    output_text.pack(pady=6)
+    output_text.pack(pady=6, anchor='center')
 
     def run_greedy():
         try:
@@ -600,7 +600,7 @@ def build_study_page():
         output_text.insert(tk.END, f"Total Time: {total_time}  Total Value: {total_value}\n")
 
     btn_frame = ttk.Frame(study_frame)
-    btn_frame.pack(pady=6)
+    btn_frame.pack(pady=6, anchor='center')
     ttk.Button(btn_frame, text="Run Greedy", command=run_greedy).grid(row=0, column=0, padx=6)
     ttk.Button(btn_frame, text="Run DP", command=run_dp).grid(row=0, column=1, padx=6)
 
@@ -612,6 +612,11 @@ def build_notes_page():
     notes_built = True
     for child in notes_frame.winfo_children():
         child.destroy()
+    # large editable text area for document content or user input
+    doc_label = ttk.Label(notes_frame, text="Inputted Text:")
+    doc_label.pack(padx=6, pady=(6,0), anchor='center')
+    doc_text = tk.Text(notes_frame, height=22, width=140, wrap='word')
+    doc_text.pack(padx=6, pady=4)
 
     content = {"text": ""}
 
@@ -654,38 +659,50 @@ def build_notes_page():
                 return
 
         content['text'] = text
+        # if user hasn't typed anything into the doc_text box, paste loaded text there
+        cur = doc_text.get('1.0', 'end').strip()
+        if not cur:
+            doc_text.delete('1.0', 'end')
+            doc_text.insert('1.0', text)
         messagebox.showinfo("Loaded", f"Loaded file: {fname}")
 
-    ttk.Button(notes_frame, text="Load File", command=load_file).pack(pady=6)
+    ttk.Button(notes_frame, text="Load File", command=load_file).pack(pady=6, padx=6, anchor='center')
 
-    # pattern input
+    # pattern input and algorithm selection
     pat_frame = ttk.Frame(notes_frame)
-    pat_frame.pack(pady=6)
-    ttk.Label(pat_frame, text="Pattern:").grid(row=0, column=0)
-    pattern_entry = ttk.Entry(pat_frame, width=40)
-    pattern_entry.grid(row=0, column=1)
+    pat_frame.pack(pady=4, padx=6, anchor='center')
+    ttk.Label(pat_frame, text="Pattern:").grid(row=0, column=0, sticky='w')
+    pattern_entry = ttk.Entry(pat_frame, width=60)
+    pattern_entry.grid(row=0, column=1, sticky='w', padx=6)
 
     alg_var = tk.StringVar(value="ALL")
     rb_frame = ttk.Frame(notes_frame)
-    rb_frame.pack(pady=4)
+    rb_frame.pack(pady=4, padx=6, anchor='center')
     for val in ["Naive", "Rabin-Karp", "KMP", "ALL"]:
         ttk.Radiobutton(rb_frame, text=val, variable=alg_var, value=val).pack(side='left', padx=6)
 
-    output = tk.Text(notes_frame, height=20, width=80)
-    output.pack(pady=6)
+    # Run button
+    run_btn = ttk.Button(notes_frame, text="Run Search")
+    run_btn.pack(pady=6, padx=6, anchor='center')
+
+    # results text box (separate from document input)
+    res_label = ttk.Label(notes_frame, text="Results:")
+    res_label.pack(padx=6, anchor='center')
+    results_text = tk.Text(notes_frame, height=16, width=100, wrap='word')
+    results_text.pack(padx=6, pady=(4,10))
 
     def run_search():
-        txt = content.get('text', '')
+        txt = doc_text.get('1.0', 'end').rstrip('\n')
         pat = pattern_entry.get()
         if not txt:
-            messagebox.showwarning("No File", "Load a document first.")
+            messagebox.showwarning("No Input", "Provide text in the document box or load a file first.")
             return
         if not pat:
             messagebox.showwarning("No Pattern", "Enter a pattern to search.")
             return
 
         choice = alg_var.get()
-        output.delete('1.0', tk.END)
+        results_text.delete('1.0', tk.END)
 
         def run_and_report(name, func):
             t0 = time.perf_counter()
@@ -694,7 +711,7 @@ def build_notes_page():
             except TypeError:
                 res = func(txt, pat)
             t1 = time.perf_counter()
-            output.insert(tk.END, f"{name}: found {len(res)} matches; indices sample: {res[:10]}\nTime: {t1-t0:.6f}s\n\n")
+            results_text.insert(tk.END, f"{name}: found {len(res)} matches; indices sample: {res[:10]}\nTime: {t1-t0:.6f}s\n\n")
 
         if choice == 'Naive' or choice == 'ALL':
             run_and_report('Naive', naive_mod.naive_string_match)
@@ -703,7 +720,7 @@ def build_notes_page():
         if choice == 'KMP' or choice == 'ALL':
             run_and_report('KMP', kmp_mod.kmp_search)
 
-    ttk.Button(notes_frame, text="Run Search", command=run_search).pack(pady=6)
+    run_btn.config(command=run_search)
 
 info_built = False
 def build_info_page():
@@ -716,18 +733,20 @@ def build_info_page():
     txt = tk.Text(info_frame, wrap='word')
     txt.pack(expand=True, fill='both', padx=10, pady=6)
     info = (
-        "Algorithm Complexities:\n"
-        "BFS/DFS: O(V+E)\n"
-        "Dijkstra (binary heap): O((V+E) log V)\n"
-        "Prim (binary heap): O((V+E) log V)\n"
-        "Greedy Scheduler (sort by ratio): O(n log n)\n"
-        "0/1 Knapsack (DP): O(n * W) where W is available time\n"
-        "Naive string match: O(nm)\n"
-        "Rabin-Karp average: O(n+m), worst-case O(nm) due to collisions\n"
-        "KMP: O(n+m)\n\n"
-        "P vs NP (short reflection):\n"
-        "P is the class of problems solvable in polynomial time. NP is the class whose solutions can be verified in polynomial time.\n"
-        "It is unknown whether P == NP. Many combinatorial optimization problems (e.g., subset sum) are NP-complete, meaning if any NP-complete problem is in P, then P==NP.\n"
+        "Algorithm Info & Complexities:\n"
+        "\nGraph Algorithms:\n"
+        "- BFS: O(V + E)\n"
+        "- DFS: O(V + E)\n"
+        "- Dijkstra (binary heap): O((V + E) log V)\n"
+        "- Prim MST (binary heap): O((V + E) log V)\n"
+        "\nStudy Planner:\n"
+        "- Greedy Scheduler: O(n log n)\n"
+        "- DP 0/1 Knapsack: O(n * C) where C = capacity in time units\n"
+        "\nNotes Search:\n"
+        "- Naive: Worst Case: O(m * n), Average Case: O(n + m) or O(n), Best Case: O(n)\n"
+        "- Rabin-Karp: Worst Case: O(n * m), Average Case: O(n + m), Best Case: O(n + m)\n"
+        "- KMP: Worst Case: O(n + m)\n"
+        "\nP vs NP Reflection\n"
     )
     txt.insert('1.0', info)
 
