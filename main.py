@@ -724,12 +724,12 @@ def build_info_page():
     txt = tk.Text(info_frame, wrap='word')
     txt.pack(expand=True, fill='both', padx=10, pady=6)
     info = (
-        "Algorithm Info & Complexities:\n"
+        "Algorithm Info & Complexities (CPSC 335)\n"
         "\nGraph Algorithms:\n"
         "- BFS: O(V + E)\n"
         "- DFS: O(V + E)\n"
         "- Dijkstra (binary heap): O((V + E) log V)\n"
-        "- Prim MST (binary heap): O((V + E) log V)\n"
+        "- Prim's MST (binary heap): O((V + E) log V)\n"
         "\nStudy Planner:\n"
         "- Greedy Scheduler: O(n log n)\n"
         "- DP 0/1 Knapsack: O(n * C) where C = capacity in time units\n"
@@ -738,8 +738,16 @@ def build_info_page():
         "- Rabin-Karp: Worst Case: O(n * m), Average Case: O(n + m), Best Case: O(n + m)\n"
         "- KMP: Worst Case: O(n + m)\n"
         "\nP vs NP Reflection\n"
+        "- P: Problems that can be solved in polynomial time.\n"
+        "- NP: Solutions that can be checked in polynomial time.\n"
+        "\nSolutions:\n"
+        "- Dijkstra Shortest Path Algorithm\n"
+        "- Prim's Algorithms (Minimum Spanning Tree)\n"
+        "--> Both Algorithms are in Polynomial Time (P). "
     )
     txt.insert('1.0', info)
+    # make the info textbox read-only so users can select/copy but not edit
+    txt.config(state='disabled')
 
 # status bar at bottom
 status_frame = ttk.Frame(root)
