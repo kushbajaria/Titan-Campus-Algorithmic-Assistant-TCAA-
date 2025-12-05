@@ -88,20 +88,20 @@ def build_home():
 build_home()
 # show home page at startup
 show_page('Home')
-# load campus map image (keep same filename or update)
-try:
-    campus_map = Image.open("campus_map.png")
-    campus_map = campus_map.resize((850, 600))
-    campus_bg = ImageTk.PhotoImage(campus_map)
-except Exception:
-    campus_bg = None
 
-# campus map canvas (inside navigator page) - match page background
-canvas = tk.Canvas(navigator_frame, width=850, height=600, bg=PAGE_BG, highlightthickness=0)
-if campus_bg:
-    canvas.create_image(0, 0, anchor="nw", image=campus_bg)
-    canvas.image = campus_bg
-canvas.grid(row=1, column=0, padx=10, pady=10)
+
+# remove visible canvas; use a dummy canvas object so visualization calls are no-ops
+class _DummyCanvas:
+    def create_oval(self, *a, **k): return None
+    def create_line(self, *a, **k): return None
+    def create_text(self, *a, **k): return None
+    def create_rectangle(self, *a, **k): return None
+    def delete(self, *a, **k): return None
+    def itemconfig(self, *a, **k): return None
+    def find_overlapping(self, *a, **k): return ()
+    def bind(self, *a, **k): return None
+
+canvas = _DummyCanvas()
 
 # right-side output / controls frame (inside navigator page)
 right_frame = ttk.Frame(navigator_frame)
@@ -111,13 +111,6 @@ right_frame.grid(row=1, column=1, padx=10, sticky='n')
 control_frame_top = ttk.Frame(right_frame)
 control_frame_top.pack(pady=5, anchor="nw")
 
-ttk.Label(control_frame_top, text="Building Name:").grid(row=0, column=0, sticky="w", padx=2)
-node_entry = ttk.Entry(control_frame_top, width=20)
-node_entry.grid(row=0, column=1, padx=6)
-
-add_node_button = ttk.Button(control_frame_top, text="Add Node")
-add_node_button.grid(row=0, column=2, padx=6)
-
 connect_button = ttk.Button(control_frame_top, text="Connect Nodes")
 connect_button.grid(row=0, column=3, padx=6)
 
@@ -126,11 +119,11 @@ control_frame_middle = ttk.Frame(right_frame)
 control_frame_middle.pack(pady=5, anchor="nw")
 
 ttk.Label(control_frame_middle, text="Start:").grid(row=0, column=0, padx=2, sticky="w")
-traversal_start = ttk.Entry(control_frame_middle, width=12)
+traversal_start = ttk.Combobox(control_frame_middle, width=12, state='readonly')
 traversal_start.grid(row=0, column=1, padx=6)
 
 ttk.Label(control_frame_middle, text="End:").grid(row=0, column=2, padx=2, sticky="w")
-end_entry = ttk.Entry(control_frame_middle, width=12)
+end_entry = ttk.Combobox(control_frame_middle, width=12, state='readonly')
 end_entry.grid(row=0, column=3, padx=6)
 
 ttk.Label(control_frame_middle, text="Goal:").grid(row=1, column=0, padx=2, sticky="w")
@@ -174,16 +167,34 @@ output_box['yscrollcommand'] = output_scroll.set
 output_box.grid(row=0, column=0)
 output_scroll.grid(row=0, column=1, sticky='ns')
 
-# dictionary/list to store nodes/edges
-# nodes[name] = (x,y)
+# dictionary/list to store nodes/edges (no canvas coordinates used)
 nodes = {}
-# edges
 edges = []
-pending_node = None
 
-# prepare to place node function
-def prepare_node_placement():
-    global pending_node
+# location dropdown to pick a base building and show distances
+location_var = tk.StringVar()
+location_combo = ttk.Combobox(right_frame, textvariable=location_var, values=[], state='readonly', width=28)
+location_combo.pack(pady=6, anchor='nw')
+
+def update_location_dropdown():
+    vals = sorted(nodes.keys())
+    location_combo['values'] = vals
+    try:
+        traversal_start['values'] = vals
+    except Exception:
+        pass
+    try:
+        end_entry['values'] = vals
+    except Exception:
+        pass
+    if vals:
+        try:
+            location_combo.current(0)
+            location_var.set(vals[0])
+        except Exception:
+            pass
+
+def add_node():
     name = node_entry.get().strip()
     if not name:
         messagebox.showwarning("Error", "Please enter a building name.")
@@ -191,28 +202,32 @@ def prepare_node_placement():
     if name in nodes:
         messagebox.showwarning("Error", f"Building {name} already exists.")
         return
-    pending_node = name
+    nodes[name] = {}
     node_entry.delete(0, tk.END)
-    messagebox.showinfo("Node Placement", f"Click on the canvas to place '{name}'.")
+    update_location_dropdown()
+    output_box.insert(tk.END, f"Added building: {name}\n")
 
-# place node function
-def place_node(event):
-    global pending_node
-    if not pending_node:
-        return
-    x, y = event.x, event.y
-    radius = 20
-    canvas.create_oval(x - radius + 3, y - radius + 3, x + radius + 3, y + radius + 3, fill='#bfbfbf', outline='')
-    oval = canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill="#4aa3e0", outline="#1f68a6", width=2)
-    # label text with readable font and contrast
-    text_id = canvas.create_text(x, y, text=pending_node, font=title_font, fill='white')
-    nodes[pending_node] = (x, y)
-    pending_node = None
+def load_predefined_graph():
+    # sample graph (undirected)
+    nodes.clear()
+    edges.clear()
+    sample_nodes = ['A', 'B', 'C', 'D', 'E', 'F']
+    for n in sample_nodes:
+        nodes[n] = {}
 
-add_node_button.config(command=prepare_node_placement)
-canvas.bind("<Button-1>", place_node)
+    sample_edges = [
+        ('A','B',3), ('A','C',5), ('B','C',2), ('B','D',4),
+        ('C','E',6), ('D','E',1), ('D','F',7), ('E','F',2)
+    ]
+    for (u,v,w) in sample_edges:
+        edges.append([u, v, int(w), int(w), True, True, None, None, None])
+    update_location_dropdown()
+    output_box.insert(tk.END, 'Loaded sample map with nodes: ' + ', '.join(sample_nodes) + '\n')
 
-# connect nodes function
+
+# load predefined graph automatically at startup
+load_predefined_graph()
+
 def connect_nodes():
     start = traversal_start.get().strip()
     end = end_entry.get().strip()
@@ -227,25 +242,14 @@ def connect_nodes():
     distance = simpledialog.askinteger("Distance", f"Enter distance from {start} to {end}:")
     if distance is None:
         return
-    time = simpledialog.askinteger("Time", f"Enter time from {start} to {end}:")
-    if time is None:
+    time_cost = simpledialog.askinteger("Time", f"Enter time from {start} to {end}:")
+    if time_cost is None:
         return
     accessible = messagebox.askyesno("Accessibility", "Is this path accessible?")
 
-    x1, y1 = nodes[start]
-    x2, y2 = nodes[end]
-    mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
-    color = "black" if accessible else "orange"
-
-    line_id = canvas.create_line(x1, y1, x2, y2, fill=color, width=3)
-    label_text = f"{distance}/{time}"
-    rect_w = max(30, len(label_text) * 7)
-    rect_id = canvas.create_rectangle(mid_x - rect_w/2, mid_y - 10, mid_x + rect_w/2, mid_y + 10, fill=PAGE_BG, outline='')
-    label_id = canvas.create_text(mid_x, mid_y, text=label_text, fill="black", tags="edge_label")
-
-    edges.append([start, end, int(distance), int(time), bool(accessible), True, line_id, label_id, rect_id])
-
-    messagebox.showinfo("Edge Created", f"Edge from {start} to {end} created successfully.")
+    # store edge without drawing ids
+    edges.append([start, end, int(distance), int(time_cost), bool(accessible), True, None, None, None])
+    output_box.insert(tk.END, f"Edge created: {start} <-> {end} distance={distance} time={time_cost} accessible={accessible}\n")
 
 connect_button.config(command=connect_nodes)
 
@@ -262,7 +266,7 @@ def toggle_edge(event):
                 messagebox.showinfo("Edge Update", f"Edge between {edge[0]} and {edge[1]} is now {status}.")
                 return
 
-canvas.bind("<Button-3>", toggle_edge)
+# no canvas binds anymore (visual canvas removed)
 
 def build_graph(accessible_only=False):
     """
