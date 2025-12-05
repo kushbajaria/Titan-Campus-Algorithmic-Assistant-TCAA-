@@ -199,22 +199,22 @@ def load_csuf_campus():
     
     # Format: (building1, building2, distance in meters, time in minutes, accessible: T or F)
     campus_edges = [
-        ('Pollak Library', 'Titan Student Union', 150, 3, True),
-        ('Pollak Library', 'McCarthy Hall', 200, 4, True),
-        ('Titan Student Union', 'McCarthy Hall', 180, 3, True),
-        ('Titan Student Union', 'Dan Black Hall', 220, 4, True),
-        ('McCarthy Hall', 'Engineering & Computer Science', 250, 5, True),
-        ('McCarthy Hall', 'Humanities & Social Sciences', 190, 4, True),
-        ('Engineering & Computer Science', 'Langsdorf Hall', 160, 3, True),
-        ('Engineering & Computer Science', 'Dan Black Hall', 280, 5, True),
+        ('Pollak Library', 'Titan Student Union', 483, 7, True),
+        ('Pollak Library', 'McCarthy Hall', 322, 5, True),
+        ('Titan Student Union', 'McCarthy Hall', 322, 5, True),
+        ('Titan Student Union', 'Dan Black Hall', 310, 4, True),
+        ('McCarthy Hall', 'Engineering & Computer Science', 483, 6, True),
+        ('McCarthy Hall', 'Humanities & Social Sciences', 213, 3, True),
+        ('Engineering & Computer Science', 'Langsdorf Hall', 480, 6, True),
+        ('Engineering & Computer Science', 'Dan Black Hall', 500, 6, True),
         ('Langsdorf Hall', 'Titan Gym', 300, 6, True),
         ('Langsdorf Hall', 'Visual Arts Complex', 240, 5, True),
         ('Titan Gym', 'Visual Arts Complex', 180, 3, True),
         ('Visual Arts Complex', 'Clayes Performing Arts Center', 120, 2, True),
-        ('Clayes Performing Arts Center', 'Humanities & Social Sciences', 200, 4, True),
+        ('Clayes Performing Arts Center', 'Humanities & Social Sciences', 300, 4, True),
         ('Dan Black Hall', 'Humanities & Social Sciences', 170, 3, True),
-        ('Pollak Library', 'Langsdorf Hall', 350, 7, True),
-        ('Titan Student Union', 'Titan Gym', 400, 8, False),  # Not accessible
+        ('Pollak Library', 'Langsdorf Hall', 350, 4, True),
+        ('Titan Student Union', 'Titan Gym', 250, 3, False),  # Not accessible
     ]
     
     for (u, v, dist, time_cost, accessible) in campus_edges:
