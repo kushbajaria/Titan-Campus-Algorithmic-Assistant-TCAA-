@@ -188,8 +188,8 @@ def load_csuf_campus():
         'Engineering & Computer Science',
         'Langsdorf Hall',
         'Titan Gym',
-        'Visual Arts Center',
-        'Performing Arts Center',
+        'Visual Arts Complex',
+        'Clayes Performing Arts Center',
         'Dan Black Hall',
         'Humanities & Social Sciences'
     ]
@@ -208,10 +208,10 @@ def load_csuf_campus():
         ('Engineering & Computer Science', 'Langsdorf Hall', 160, 3, True),
         ('Engineering & Computer Science', 'Dan Black Hall', 280, 5, True),
         ('Langsdorf Hall', 'Titan Gym', 300, 6, True),
-        ('Langsdorf Hall', 'Visual Arts Center', 240, 5, True),
-        ('Titan Gym', 'Visual Arts Center', 180, 3, True),
-        ('Visual Arts Center', 'Performing Arts Center', 120, 2, True),
-        ('Performing Arts Center', 'Humanities & Social Sciences', 200, 4, True),
+        ('Langsdorf Hall', 'Visual Arts Complex', 240, 5, True),
+        ('Titan Gym', 'Visual Arts Complex', 180, 3, True),
+        ('Visual Arts Complex', 'Clayes Performing Arts Center', 120, 2, True),
+        ('Clayes Performing Arts Center', 'Humanities & Social Sciences', 200, 4, True),
         ('Dan Black Hall', 'Humanities & Social Sciences', 170, 3, True),
         ('Pollak Library', 'Langsdorf Hall', 350, 7, True),
         ('Titan Student Union', 'Titan Gym', 400, 8, False),  # Not accessible
@@ -416,16 +416,13 @@ def run_dfs():
     for i, building in enumerate(traversal, 1):
         output_box.insert(tk.END, f"  {i}. {building}\n")
     
-    output_box.insert(tk.END, f"\n✓ Visited {len(traversal)} buildings\n")
+    output_box.insert(tk.END, f"\n✓ {len(traversal)} buildings\n")
     output_box.insert(tk.END, f"✓ Path length (edges traversed): {len(traversal) - 1}\n")
     
     if disconnected:
         output_box.insert(tk.END, f"\n⚠ Warning: {len(disconnected)} buildings not reachable:\n")
         for building in disconnected:
             output_box.insert(tk.END, f"  - {building}\n")
-    else:
-        output_box.insert(tk.END, "\n✓ Graph is fully connected!\n")
-    
     output_box.see(tk.END)
 
 def run_dijkstra():
