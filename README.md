@@ -4,8 +4,8 @@ The Titan Campus Algorithmic Assistant (TCAA) is a comprehensive, hands-on final
 
 ## Instructions
 1. Run 'main.py' from the project directory.
-2. Select a module to begin (Campus Navigator, Study Planner, Notes Search, Algorithm Info).
-    - To run campus navigator, select a start and end building and click on a algorithm. Observe results.
-    - To run the study planner, enter task with associated time and value. Set an available time, run Greedy or DP and observe results.
+2. Select a module from the menu to begin: Campus Navigator, Study Planner, Notes Search, Algorithm Info.
+    - To run campus navigator, select a start and end building. Click on a algorithm and observe the results.
+    - To run the study planner, enter task with associated time and value. Set an available time, run Greedy or DP and observe the results.
     - To run the notes search, enter text into the textbox or load a file (PDF, DOCX, TXT). Enter a pattern in the field, select the search algorithm and obeserve the results. 
     - The Algorithm Info Page simply gives insight into Algorithm Info & Complexities and P vs NP.
