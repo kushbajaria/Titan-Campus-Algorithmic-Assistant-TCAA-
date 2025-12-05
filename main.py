@@ -9,7 +9,7 @@ from algorithms import dijkstra, prim, greedy_scheduler, knapsack
 from algorithms.dijkstra_rebuild_path import rebuild_path as dijkstra_rebuild_path
 from algorithms import naive as naive_mod, rabin_karp as rk_mod, kmp as kmp_mod
 
-# optional document libraries (may be missing in some environments)
+# optional document libraries
 try:
     import PyPDF2
 except Exception:
@@ -20,10 +20,9 @@ try:
 except Exception:
     docx = None
 
-
-# create gui window
+# Create GUI window
 root = tk.Tk()
-root.title("Titan Campus Algorithmic Assistant (TCAA)")
+root.title("Titan Campus Navigator")
 root.geometry("1100x900")
 
 # UI styling
@@ -32,13 +31,13 @@ try:
     style.theme_use('clam')
 except Exception:
     pass
-primary_font = tkfont.Font(family='Ayuthaya', size=11)
-title_font = tkfont.Font(family='Ayuthaya', size=12, weight='bold')
-mono_font = tkfont.Font(family='Ayuthaya', size=10)
+primary_font = tkfont.Font(family='Arial', size=11)
+title_font = tkfont.Font(family='Arial', size=14, weight='bold')
+mono_font = tkfont.Font(family='Courier', size=10)
 style.configure('TButton', padding=6)
 style.configure('TLabel', font=primary_font)
-style.configure('TFrame', background='grey')
-# page background color used by styled cards
+
+# page background color used by style cards
 PAGE_BG = '#f7f7f7'
 
 # card/section styles for nicer navigator
@@ -46,10 +45,11 @@ style.configure('Card.TFrame', background=PAGE_BG)
 style.configure('Section.TLabel', font=title_font, background=PAGE_BG)
 style.configure('Small.TLabel', font=primary_font, background=PAGE_BG)
 style.configure('Accent.TButton', font=primary_font)
+
 # status bar variable (updated by actions)
 page_location_var = tk.StringVar(value='Home')
 
-# Pages: home, navigator, study, notes, info
+# Pages: home, navigator, study, notes, algo info
 pages = {}
 home_frame = ttk.Frame(root)
 navigator_frame = ttk.Frame(root)
@@ -61,10 +61,12 @@ pages['Campus Navigator'] = navigator_frame
 pages['Study Planner'] = study_frame
 pages['Notes Search'] = notes_frame
 pages['Algorithm Info'] = info_frame
+
 # global header (single page-location indicator for all pages)
 global_header = ttk.Frame(root)
 global_header.pack(fill='x')
 ttk.Label(global_header, textvariable=page_location_var, font=primary_font).pack(side='left', padx=10)
+
 # right-side header button (switches between Home and Quit depending on page)
 header_right_btn = ttk.Button(global_header, text='Home', command=lambda: show_page('Home'))
 header_right_btn.pack(side='right', padx=10)
@@ -78,6 +80,7 @@ def show_page(name):
             pass
     pages[name].pack(fill='both', expand=True)
     page_location_var.set(name.title())
+
     # update header button: show Quit when on Home, otherwise show Home
     try:
         if name == 'Home':
@@ -103,403 +106,391 @@ def build_home():
     ttk.Button(btn_frame, text='Notes Search', width=20, command=lambda: (build_notes_page(), show_page('Notes Search'))).grid(row=1, column=0, padx=8, pady=8)
     ttk.Button(btn_frame, text='Algorithm Info', width=20, command=lambda: (build_info_page(), show_page('Algorithm Info'))).grid(row=1, column=1, padx=8, pady=8)
 
+# build home and show it at startup
 build_home()
 # show home page at startup
 show_page('Home')
 
+navigator_frame.config(padding=10)
 
-# remove visible canvas; use a dummy canvas object so visualization calls are no-ops
-class _DummyCanvas:
-    def create_oval(self, *a, **k): return None
-    def create_line(self, *a, **k): return None
-    def create_text(self, *a, **k): return None
-    def create_rectangle(self, *a, **k): return None
-    def delete(self, *a, **k): return None
-    def itemconfig(self, *a, **k): return None
-    def find_overlapping(self, *a, **k): return ()
-    def bind(self, *a, **k): return None
+# Title
+title_label = ttk.Label(navigator_frame, text="CSUF Campus Navigator", font=title_font)
+title_label.pack(pady=(0, 10))
 
-canvas = _DummyCanvas()
+# Control panel
+control_frame = ttk.LabelFrame(navigator_frame, text="Navigation Controls", padding=10)
+control_frame.pack(fill='x', pady=(0, 10))
 
-# Navigator layout: controls/output full-width (no map placeholder)
-right_frame = ttk.Frame(navigator_frame, padding=8)
-right_frame.pack(fill='both', expand=True, padx=12, pady=12)
+# Start and End building selectors
+selector_frame = ttk.Frame(control_frame)
+selector_frame.pack(fill='x', pady=5)
 
-# Controls card (styled) containing selectors, actions, and algorithm buttons
-controls_card = ttk.Frame(right_frame, style='Card.TFrame', padding=10)
-controls_card.pack(fill='x', pady=(0,8))
+ttk.Label(selector_frame, text='Start Building:', font=primary_font).grid(row=0, column=0, sticky='w', padx=5)
+start_building = ttk.Combobox(selector_frame, width=25, state='readonly')
+start_building.grid(row=0, column=1, padx=5, pady=5)
 
-# first row: start / end / goal / add building
-sel_row = ttk.Frame(controls_card, style='Card.TFrame')
-sel_row.pack(fill='x', pady=(0,8))
+ttk.Label(selector_frame, text='End Building:', font=primary_font).grid(row=0, column=2, sticky='w', padx=5)
+end_building = ttk.Combobox(selector_frame, width=25, state='readonly')
+end_building.grid(row=0, column=3, padx=5, pady=5)
 
-ttk.Label(sel_row, text='Start:', style='Small.TLabel').grid(row=0, column=0, sticky='w')
-traversal_start = ttk.Combobox(sel_row, width=16, state='readonly')
-traversal_start.grid(row=0, column=1, padx=6)
+# Algorithm buttons
+button_frame = ttk.Frame(control_frame)
+button_frame.pack(fill='x', pady=10)
 
-ttk.Label(sel_row, text='End:', style='Small.TLabel').grid(row=0, column=2, sticky='w')
-end_entry = ttk.Combobox(sel_row, width=16, state='readonly')
-end_entry.grid(row=0, column=3, padx=6)
+bfs_button = ttk.Button(button_frame, text='Run BFS (Fewest Hops)', width=20)
+bfs_button.pack(side='left', padx=5)
 
-# algorithm buttons
-algo_row = ttk.Frame(controls_card, style='Card.TFrame')
-algo_row.pack(fill='x', pady=(0,8))
-bfs_button = ttk.Button(algo_row, text='Run BFS', style='Accent.TButton')
-bfs_button.pack(side='left', padx=6)
-dfs_button = ttk.Button(algo_row, text='Run DFS', style='Accent.TButton')
-dfs_button.pack(side='left', padx=6)
-dijkstra_button = ttk.Button(algo_row, text='Run Dijkstra', style='Accent.TButton')
-dijkstra_button.pack(side='left', padx=6)
-prim_button = ttk.Button(algo_row, text="Run Prim's MST", style='Accent.TButton')
-prim_button.pack(side='left', padx=6)
-randomize_button = ttk.Button(algo_row, text='Randomize Weights', style='Accent.TButton')
-randomize_button.pack(side='left', padx=6)
+dfs_button = ttk.Button(button_frame, text='Run DFS Traversal', width=20)
+dfs_button.pack(side='left', padx=5)
 
-# info / output label and scrollable text area (fills remaining space)
-output_label = ttk.Label(right_frame, text='Output', style='Section.TLabel')
-output_label.pack(anchor='nw', pady=(6,0))
-output_frame = ttk.Frame(right_frame)
-output_frame.pack(fill='both', expand=True, pady=(4,0))
-output_box = tk.Text(output_frame, width=80, height=18, font=mono_font, wrap='word', bg='#ffffff')
+dijkstra_button = ttk.Button(button_frame, text='Run Dijkstra (Shortest)', width=20)
+dijkstra_button.pack(side='left', padx=5)
+
+prim_button = ttk.Button(button_frame, text="Run Prim's MST", width=20)
+prim_button.pack(side='left', padx=5)
+
+# Output area
+output_frame = ttk.LabelFrame(navigator_frame, text="Results", padding=10)
+output_frame.pack(fill='both', expand=True)
+
+output_box = tk.Text(output_frame, width=100, height=25, font=mono_font, wrap='word', bg='#ffffff', fg='black')
 output_scroll = ttk.Scrollbar(output_frame, orient='vertical', command=output_box.yview)
 output_box['yscrollcommand'] = output_scroll.set
-output_box.grid(row=0, column=0, sticky='nsew')
-output_scroll.grid(row=0, column=1, sticky='ns')
-output_frame.grid_rowconfigure(0, weight=1)
-output_frame.grid_columnconfigure(0, weight=1)
+output_box.pack(side='left', fill='both', expand=True)
+output_scroll.pack(side='right', fill='y')
 
-# dictionary/list to store nodes/edges (no canvas coordinates used)
+clear_button = ttk.Button(navigator_frame, text="Clear Output", command=lambda: output_box.delete("1.0", tk.END))
+clear_button.pack(pady=5)
+
+# Graph data structures
 nodes = {}
 edges = []
 
-# location dropdown to pick a base building and show distances
-location_var = tk.StringVar()
-location_combo = ttk.Combobox(right_frame, textvariable=location_var, values=[], state='readonly', width=28)
-location_combo.pack(pady=6, anchor='nw')
-
-def update_location_dropdown():
-    vals = sorted(nodes.keys())
-    location_combo['values'] = vals
-    try:
-        traversal_start['values'] = vals
-    except Exception:
-        pass
-    try:
-        end_entry['values'] = vals
-    except Exception:
-        pass
-    if vals:
-        try:
-            location_combo.current(0)
-            location_var.set(vals[0])
-        except Exception:
-            pass
-
-def add_node():
-    name = node_entry.get().strip()
-    if not name:
-        messagebox.showwarning("Error", "Please enter a building name.")
-        return
-    if name in nodes:
-        messagebox.showwarning("Error", f"Building {name} already exists.")
-        return
-    nodes[name] = {}
-    node_entry.delete(0, tk.END)
-    update_location_dropdown()
-    output_box.insert(tk.END, f"Added building: {name}\n")
-
-def load_predefined_graph():
-    # sample graph (undirected)
+def load_csuf_campus():
+    """Load realistic CSUF campus buildings and connections"""
     nodes.clear()
     edges.clear()
-    sample_nodes = ['A', 'B', 'C', 'D', 'E', 'F']
-    for n in sample_nodes:
-        nodes[n] = {}
-
-    sample_edges = [
-        ('A','B',3), ('A','C',5), ('B','C',2), ('B','D',4),
-        ('C','E',6), ('D','E',1), ('D','F',7), ('E','F',2)
+    
+    # CSUF Buildings (realistic campus locations)
+    buildings = [
+        'Pollak Library',
+        'Titan Student Union',
+        'McCarthy Hall',
+        'Engineering & Computer Science',
+        'Langsdorf Hall',
+        'Titan Gym',
+        'Visual Arts Center',
+        'Performing Arts Center',
+        'Dan Black Hall',
+        'Humanities & Social Sciences'
     ]
-    for (u,v,w) in sample_edges:
-        edges.append([u, v, int(w), int(w), True, True, None, None, None])
-    update_location_dropdown()
-    output_box.insert(tk.END, 'Loaded sample map with nodes: ' + ', '.join(sample_nodes) + '\n')
+    
+    for building in buildings:
+        nodes[building] = {}
+    
+    # Realistic campus connections with distances in meters
+    # Format: (building1, building2, distance_meters, time_minutes, accessible)
+    campus_edges = [
+        ('Pollak Library', 'Titan Student Union', 150, 3, True),
+        ('Pollak Library', 'McCarthy Hall', 200, 4, True),
+        ('Titan Student Union', 'McCarthy Hall', 180, 3, True),
+        ('Titan Student Union', 'Dan Black Hall', 220, 4, True),
+        ('McCarthy Hall', 'Engineering & Computer Science', 250, 5, True),
+        ('McCarthy Hall', 'Humanities & Social Sciences', 190, 4, True),
+        ('Engineering & Computer Science', 'Langsdorf Hall', 160, 3, True),
+        ('Engineering & Computer Science', 'Dan Black Hall', 280, 5, True),
+        ('Langsdorf Hall', 'Titan Gym', 300, 6, True),
+        ('Langsdorf Hall', 'Visual Arts Center', 240, 5, True),
+        ('Titan Gym', 'Visual Arts Center', 180, 3, True),
+        ('Visual Arts Center', 'Performing Arts Center', 120, 2, True),
+        ('Performing Arts Center', 'Humanities & Social Sciences', 200, 4, True),
+        ('Dan Black Hall', 'Humanities & Social Sciences', 170, 3, True),
+        ('Pollak Library', 'Langsdorf Hall', 350, 7, True),
+        ('Titan Student Union', 'Titan Gym', 400, 8, False),  # Not accessible
+    ]
+    
+    for (u, v, dist, time_cost, accessible) in campus_edges:
+        edges.append([u, v, dist, time_cost, accessible, True, None, None, None])
+    
+    # Update dropdowns
+    building_list = sorted(buildings)
+    start_building['values'] = building_list
+    end_building['values'] = building_list
+    
+    if building_list:
+        start_building.current(0)
+        end_building.current(1 if len(building_list) > 1 else 0)
 
-
-# load predefined graph automatically at startup
-load_predefined_graph()
-
-def connect_nodes():
-    start = traversal_start.get().strip()
-    end = end_entry.get().strip()
-
-    if start not in nodes or end not in nodes:
-        messagebox.showwarning("Error", "One or both buildings do not exist.")
-        return
-    if start == end:
-        messagebox.showwarning("Error", "Cannot connect a building to itself.")
-        return
-
-    distance = simpledialog.askinteger("Distance", f"Enter distance from {start} to {end}:")
-    if distance is None:
-        return
-    time_cost = simpledialog.askinteger("Time", f"Enter time from {start} to {end}:")
-    if time_cost is None:
-        return
-    accessible = messagebox.askyesno("Accessibility", "Is this path accessible?")
-
-    # store edge without drawing ids
-    edges.append([start, end, int(distance), int(time_cost), bool(accessible), True, None, None, None])
-    output_box.insert(tk.END, f"Edge created: {start} <-> {end} distance={distance} time={time_cost} accessible={accessible}\n")
-
-# toggle edges function (right-click)
-def toggle_edge(event):
-    clicked_items = canvas.find_overlapping(event.x - 2, event.y - 2, event.x + 2, event.y + 2)
-    for item in clicked_items:
-        for edge in edges:
-            if len(edge) >= 9 and (edge[6] == item or edge[7] == item or edge[8] == item):
-                edge[5] = not edge[5]  # open/closed
-                new_color = "red" if not edge[5] else ("black" if edge[4] else "orange")
-                canvas.itemconfig(edge[6], fill=new_color)
-                status = "closed" if not edge[5] else "open"
-                messagebox.showinfo("Edge Update", f"Edge between {edge[0]} and {edge[1]} is now {status}.")
-                return
-
-# no canvas binds anymore (visual canvas removed)
-
-def build_graph(accessible_only=False):
-    """
-    Returns graph in format:
-    { node: [(neighbor, weight), ...], ... }
-    weight used = distance (you can change to time if preferred)
-    """
+def build_graph():
+    """Build adjacency list representation of graph"""
     graph = {node: [] for node in nodes}
     for edge in edges:
-        start, end, distance, time_cost, accessible, open_, line_id, label_id = edge[:8]
-        if not open_:
-            continue
-        if accessible_only and not accessible:
-            continue
-        graph[start].append((end, distance))
-        graph[end].append((start, distance))
+        start, end, distance, time_cost, accessible, is_open = edge[:6]
+        if is_open:  # Only include open edges
+            # Undirected graph - add both directions
+            graph[start].append((end, distance))
+            graph[end].append((start, distance))
     return graph
 
-def bfs(start, goal, accessible_only=False):
-    graph = build_graph(accessible_only)
+def bfs(start, goal):
+    """BFS: Find path with fewest hops"""
+    graph = build_graph()
     visited = set()
     queue = [(start, [start])]
     traversal_order = []
-
+    
     while queue:
         current, path = queue.pop(0)
         if current in visited:
             continue
-
+        
         visited.add(current)
         traversal_order.append(current)
-
+        
         if current == goal:
             return path, traversal_order
-
-        for neighbor, _ in graph.get(current, []):
+        
+        for neighbor, _ in sorted(graph.get(current, [])):
             if neighbor not in visited:
                 queue.append((neighbor, path + [neighbor]))
-
+    
     return None, traversal_order
 
-def dfs(start, goal, accessible_only=False):
-    graph = build_graph(accessible_only)
+def dfs(start):
+    """DFS: Traverse entire graph and return order"""
+    graph = build_graph()
     visited = set()
-    stack = [(start, [start])]
     traversal_order = []
+    
+    def dfs_recursive(node):
+        visited.add(node)
+        traversal_order.append(node)
+        
+        for neighbor, _ in sorted(graph.get(node, [])):
+            if neighbor not in visited:
+                dfs_recursive(neighbor)
+    
+    dfs_recursive(start)
+    
+    # Check connectivity
+    all_nodes = set(nodes.keys())
+    disconnected = all_nodes - visited
+    
+    return traversal_order, disconnected
 
-    while stack:
-        current, path = stack.pop()
+def dijkstra(start, goal):
+    """Dijkstra: Find shortest weighted path"""
+    import heapq
+    
+    graph = build_graph()
+    distances = {node: float('inf') for node in nodes}
+    distances[start] = 0
+    parents = {node: None for node in nodes}
+    pq = [(0, start)]
+    visited = set()
+    
+    while pq:
+        curr_dist, current = heapq.heappop(pq)
+        
         if current in visited:
             continue
-
+        
         visited.add(current)
-        traversal_order.append(current)
-
+        
         if current == goal:
-            return path, traversal_order
+            break
+        
+        for neighbor, weight in graph.get(current, []):
+            new_dist = curr_dist + weight
+            if new_dist < distances[neighbor]:
+                distances[neighbor] = new_dist
+                parents[neighbor] = current
+                heapq.heappush(pq, (new_dist, neighbor))
+    
+    # Rebuild path
+    if distances[goal] == float('inf'):
+        return None, distances[goal]
+    
+    path = []
+    current = goal
+    while current is not None:
+        path.append(current)
+        current = parents[current]
+    path.reverse()
+    
+    return path, distances[goal]
 
-        # reversed so original order similar to recursive
-        for neighbor, _ in reversed(graph.get(current, [])):
-            if neighbor not in visited:
-                stack.append((neighbor, path + [neighbor]))
-
-    return None, traversal_order
-
-# visualization implementation function
-def visualize(path, visited, highlight_color="green", line_width=3):
-    canvas.delete("traversal")
-    # highlight visited nodes
-    for node in visited:
-        if node not in nodes:
+def prim_mst(start):
+    """Prim's Algorithm: Find Minimum Spanning Tree"""
+    import heapq
+    
+    graph = build_graph()
+    mst_edges = []
+    visited = set([start])
+    edges_heap = []
+    
+    # Add all edges from start node
+    for neighbor, weight in graph.get(start, []):
+        heapq.heappush(edges_heap, (weight, start, neighbor))
+    
+    total_cost = 0
+    
+    while edges_heap and len(visited) < len(nodes):
+        weight, u, v = heapq.heappop(edges_heap)
+        
+        if v in visited:
             continue
-        x, y = nodes[node]
-        radius = 18
-        canvas.create_oval(x - radius, y - radius, x + radius, y + radius, outline=highlight_color, width=3, tags="traversal")
-
-    # draw path edges
-    if path:
-        for i in range(len(path) - 1):
-            a = path[i]
-            b = path[i + 1]
-            if a in nodes and b in nodes:
-                x1, y1 = nodes[a]
-                x2, y2 = nodes[b]
-                canvas.create_line(x1, y1, x2, y2, fill=highlight_color, width=line_width, tags="traversal")
+        
+        # Add edge to MST
+        visited.add(v)
+        mst_edges.append((u, v, weight))
+        total_cost += weight
+        
+        # Add all edges from newly visited node
+        for neighbor, edge_weight in graph.get(v, []):
+            if neighbor not in visited:
+                heapq.heappush(edges_heap, (edge_weight, v, neighbor))
+    
+    disconnected = len(visited) < len(nodes)
+    return mst_edges, total_cost, disconnected
 
 def run_bfs():
-    start = traversal_start.get().strip()
-    goal = traversal_goal.get().strip()
-    if start not in nodes or goal not in nodes:
-        messagebox.showwarning("Error", "Start or goal building does not exist.")
+    """Execute BFS and display results"""
+    start = start_building.get().strip()
+    goal = end_building.get().strip()
+    
+    if not start or not goal:
+        messagebox.showwarning("Error", "Please select start and end buildings.")
         return
-    path, visited = bfs(start, goal, accessible_only_var.get())
+    
+    if start not in nodes or goal not in nodes:
+        messagebox.showwarning("Error", "Selected buildings do not exist.")
+        return
+    
+    path, visited = bfs(start, goal)
+    
+    output_box.insert(tk.END, '\n' + '=' * 70 + '\n')
+    output_box.insert(tk.END, 'BFS RESULT (Fewest Hops)\n')
+    output_box.insert(tk.END, '=' * 70 + '\n')
+    
     if not path:
-        output_box.insert(tk.END, "BFS: No path was found.\n\n")
-        messagebox.see(tk.END)
+        output_box.insert(tk.END, f"❌ No path found from '{start}' to '{goal}'\n")
     else:
-        output_box.insert(tk.END,
-            f"BFS Result:\nFull Path: {' -> '.join(path)}\n"
-            f"Traversal Order: {' -> '.join(visited)}\n"
-            f"Path Length (edges): {len(path) - 1}\n\n"
-        )
-        output_box.see(tk.END)
-    visualize(path if path else [], visited)
+        output_box.insert(tk.END, f"Start: {start}\n")
+        output_box.insert(tk.END, f"Goal:  {goal}\n\n")
+        output_box.insert(tk.END, f"Path (fewest hops):\n")
+        for i, building in enumerate(path, 1):
+            output_box.insert(tk.END, f"  {i}. {building}\n")
+        output_box.insert(tk.END, f"\n✓ Number of hops: {len(path) - 1}\n")
+    
+    output_box.insert(tk.END, f"\nTraversal order: {' → '.join(visited)}\n")
+    output_box.see(tk.END)
 
 def run_dfs():
-    start = traversal_start.get().strip()
-    goal = traversal_goal.get().strip()
-    if start not in nodes or goal not in nodes:
-        messagebox.showwarning("Error", "Start or goal building does not exist.")
+    """Execute DFS and display results"""
+    start = start_building.get().strip()
+    
+    if not start:
+        messagebox.showwarning("Error", "Please select a start building.")
         return
-    path, visited = dfs(start, goal, accessible_only_var.get())
-    if not path:
-        output_box.insert(tk.END, "DFS: No path was found.\n\n")
-        output_box.see(tk.END)
+    
+    if start not in nodes:
+        messagebox.showwarning("Error", "Selected building does not exist.")
+        return
+    
+    traversal, disconnected = dfs(start)
+    
+    output_box.insert(tk.END, '\n' + '=' * 70 + '\n')
+    output_box.insert(tk.END, 'DFS RESULT (Depth-First Traversal)\n')
+    output_box.insert(tk.END, '=' * 70 + '\n')
+    output_box.insert(tk.END, f"Starting from: {start}\n\n")
+    output_box.insert(tk.END, f"Traversal order:\n")
+    for i, building in enumerate(traversal, 1):
+        output_box.insert(tk.END, f"  {i}. {building}\n")
+    
+    output_box.insert(tk.END, f"\n✓ Visited {len(traversal)} buildings\n")
+    
+    if disconnected:
+        output_box.insert(tk.END, f"\n⚠ Warning: {len(disconnected)} buildings not reachable:\n")
+        for building in disconnected:
+            output_box.insert(tk.END, f"  - {building}\n")
     else:
-        output_box.insert(tk.END,
-            f"DFS Result:\nFull Path: {' -> '.join(path)}\n"
-            f"Traversal Order: {' -> '.join(visited)}\n"
-            f"Path Length (edges): {len(path) - 1}\n\n"
-        )
-        output_box.see(tk.END)
-    visualize(path if path else [], visited, highlight_color="blue")
+        output_box.insert(tk.END, "\n✓ Graph is fully connected!\n")
+    
+    output_box.see(tk.END)
 
 def run_dijkstra():
-    start = traversal_start.get().strip()
-    goal = end_entry.get().strip()
+    """Execute Dijkstra and display results"""
+    start = start_building.get().strip()
+    goal = end_building.get().strip()
+    
+    if not start or not goal:
+        messagebox.showwarning("Error", "Please select start and end buildings.")
+        return
+    
     if start not in nodes or goal not in nodes:
-        messagebox.showwarning("Error", "Start or end building does not exist.")
+        messagebox.showwarning("Error", "Selected buildings do not exist.")
         return
-
-    graph = build_graph(accessible_only_var.get())
-    try:
-        distances, parents = dijkstra(graph, start)
-    except Exception as e:
-        messagebox.showerror("Error", f"Dijkstra failed: {e}")
-        return
-
-    dist_to_goal = distances.get(goal, float('inf'))
-    if dist_to_goal == float('inf'):
-        output_box.insert(tk.END, f"Dijkstra: No path found from {start} to {goal}.\n\n")
-        output_box.see(tk.END)
-        return
-
-    # rebuild path
-    try:
-        path = dijkstra_rebuild_path(parents, goal)
-    except Exception:
-        path = []
-        cur = goal
-        while cur is not None:
-            path.append(cur)
-            cur = parents.get(cur)
-        path.reverse()
-
-    output_box.insert(tk.END,
-        f"Dijkstra Result:\nStart: {start}  End: {goal}\n"
-        f"Shortest Distance: {dist_to_goal}\n"
-        f"Path: {' -> '.join(path)}\n\n"
-    )
+    
+    path, distance = dijkstra(start, goal)
+    
+    output_box.insert(tk.END, '\n' + '=' * 70 + '\n')
+    output_box.insert(tk.END, 'DIJKSTRA RESULT (Shortest Path)\n')
+    output_box.insert(tk.END, '=' * 70 + '\n')
+    
+    if not path:
+        output_box.insert(tk.END, f"❌ No path found from '{start}' to '{goal}'\n")
+    else:
+        output_box.insert(tk.END, f"Start: {start}\n")
+        output_box.insert(tk.END, f"Goal:  {goal}\n\n")
+        output_box.insert(tk.END, f"Shortest path:\n")
+        for i, building in enumerate(path, 1):
+            output_box.insert(tk.END, f"  {i}. {building}\n")
+        output_box.insert(tk.END, f"\n✓ Total distance: {distance} meters\n")
+        output_box.insert(tk.END, f"✓ Estimated walk time: {distance // 50} minutes\n")
+    
     output_box.see(tk.END)
-    visualize(path, path, highlight_color="darkgreen")
 
 def run_prim():
-    start = traversal_start.get().strip()
+    """Execute Prim's MST and display results"""
+    start = start_building.get().strip()
+    
+    if not start:
+        messagebox.showwarning("Error", "Please select a start building.")
+        return
+    
     if start not in nodes:
-        messagebox.showwarning("Error", "Start building does not exist.")
+        messagebox.showwarning("Error", "Selected building does not exist.")
         return
-
-    graph = build_graph(accessible_only_var.get())
-    try:
-        res = prim(graph, start)
-        if len(res) == 2:
-            mst_edges, total_cost = res
-            disconnected = (len(mst_edges) == 0 and len(nodes) > 0)
-        else:
-            mst_edges, total_cost, disconnected = res
-    except Exception as e:
-        messagebox.showerror("Error", f"Prim failed: {e}")
-        return
-
+    
+    mst_edges, total_cost, disconnected = prim_mst(start)
+    
+    output_box.insert(tk.END, '\n' + '=' * 70 + '\n')
+    output_box.insert(tk.END, "PRIM'S MST RESULT (Minimum Spanning Tree)\n")
+    output_box.insert(tk.END, '=' * 70 + '\n')
+    output_box.insert(tk.END, f"Starting from: {start}\n\n")
+    
     if disconnected:
-        output_box.insert(tk.END, "Prim's MST: Graph appears to be disconnected. Returned forest for component of start node.\n")
-    output_box.insert(tk.END, "Prim's MST Edges:\n")
-    for u, v, w in mst_edges:
-        output_box.insert(tk.END, f"  {u} -- {v} (weight {w})\n")
-    output_box.insert(tk.END, f"Total MST Cost: {total_cost}\n\n")
+        output_box.insert(tk.END, "⚠ Warning: Graph is disconnected. Showing MST for connected component.\n\n")
+    
+    output_box.insert(tk.END, f"MST Edges:\n")
+    for i, (u, v, weight) in enumerate(mst_edges, 1):
+        output_box.insert(tk.END, f"  {i}. {u} ↔ {v} (weight: {weight}m)\n")
+    
+    output_box.insert(tk.END, f"\n✓ Total edges: {len(mst_edges)}\n")
+    output_box.insert(tk.END, f"✓ Total MST cost: {total_cost} meters\n")
+    output_box.insert(tk.END, f"✓ Buildings connected: {len(mst_edges) + 1}\n")
+    
     output_box.see(tk.END)
 
-    # visualize MST: draw each MST edge in purple
-    canvas.delete("mst")
-    for u, v, w in mst_edges:
-        if u in nodes and v in nodes:
-            x1, y1 = nodes[u]
-            x2, y2 = nodes[v]
-            canvas.create_line(x1, y1, x2, y2, fill="purple", width=3, tags="mst")
-            mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-            canvas.create_text(mx, my + 12, text=str(w), tags="mst")
-
-# connect buttons
+# Connect buttons to functions
 bfs_button.config(command=run_bfs)
 dfs_button.config(command=run_dfs)
 dijkstra_button.config(command=run_dijkstra)
 prim_button.config(command=run_prim)
 
-# randomize weights function
-def randomize_weights():
-    for edge in edges:
-        edge[2] = random.randint(1, 20)  # distance
-        edge[3] = random.randint(1, 20)  # time
-
-    # update edge labels
-    for edge in edges:
-        start, end, distance, time_cost, accessible, open_, line_id, label_id = edge[:8]
-        if label_id:
-            canvas.itemconfig(label_id, text=f"{distance}/{time_cost}")
-    messagebox.showinfo("Randomize", "Edge distances and times have been randomized.")
-
-randomize_button.config(command=randomize_weights)
-
-# set goal function
-def set_goal():
-    goal = traversal_goal.get().strip()
-    if goal not in nodes:
-        messagebox.showwarning("Error", "Goal building does not exist.")
-        return
-    messagebox.showinfo("Goal Set", f"Goal set to {goal}")
-
-
-def clear_output():
-    output_box.delete("1.0", tk.END)
-
-clear_button = ttk.Button(right_frame, text="Clear Output", command=clear_output)
-clear_button.pack(anchor="nw", pady=6)
+# Load campus data on startup
+load_csuf_campus()
 
 # Study Planner Page
 study_built = False
@@ -755,5 +746,6 @@ def build_info_page():
 status_frame = ttk.Frame(root)
 status_frame.pack(side='bottom', fill='x')
 
-# run main loop
-root.mainloop()
+# run main loop only when executed directly
+if __name__ == '__main__':
+    root.mainloop()
