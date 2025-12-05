@@ -1,0 +1,72 @@
+Sample Test Document with Repeated Words in Different Orders
+=============================================================
+
+apple banana orange apple grape banana apple orange banana grape apple
+test search algorithm test pattern search test algorithm pattern test
+quick brown fox jumps lazy dog quick fox brown dog jumps lazy quick
+hello world goodbye hello universe world hello goodbye universe world
+code function variable code loop function code variable loop function
+data string array data buffer string data array buffer string data
+python java javascript python ruby java python javascript ruby java
+north south east west north east south west north west east south
+red blue green yellow red green blue yellow red yellow green blue
+cat dog bird fish cat bird dog fish cat fish bird dog cat
+book pen paper book ruler pen book paper ruler pen book
+car bike train plane car train bike plane car plane train bike
+summer winter spring fall summer spring winter fall summer fall spring winter
+monday tuesday wednesday thursday monday wednesday tuesday thursday monday thursday wednesday tuesday
+morning afternoon evening night morning evening afternoon night morning night evening afternoon
+coffee tea water juice coffee water tea juice coffee juice water tea
+happy sad angry calm happy angry sad calm happy calm angry sad
+hot cold warm cool hot warm cold cool hot cool warm cold
+big small large tiny big large small tiny big tiny large small
+fast slow quick rapid fast quick slow rapid fast rapid quick slow
+left right up down left up right down left down up right
+start stop pause continue start pause stop continue start continue pause stop
+open close lock unlock open lock close unlock open unlock lock close
+push pull slide twist push slide pull twist push twist slide pull
+alpha beta gamma delta alpha gamma beta delta alpha delta gamma beta
+circle square triangle oval circle triangle square oval circle oval triangle square
+violin guitar piano drums violin piano guitar drums violin drums piano guitar
+apple apple banana banana orange orange grape grape apple banana orange grape
+test test search search algorithm algorithm pattern pattern test search algorithm pattern
+data data string string array array buffer buffer data string array buffer
+north north south south east east west west north south east west
+red red blue blue green green yellow yellow red blue green yellow
+one two three four one three two four one four three two one
+first second third fourth first third second fourth first fourth third second
+sun moon star cloud sun star moon cloud sun cloud star moon
+tree flower grass bush tree grass flower bush tree bush grass flower
+mountain valley river lake mountain river valley lake mountain lake river valley
+fire water earth air fire earth water air fire air earth water
+gold silver bronze copper gold bronze silver copper gold copper bronze silver
+king queen prince princess king prince queen princess king princess prince queen
+lion tiger bear wolf lion bear tiger wolf lion wolf bear tiger
+bread butter cheese milk bread cheese butter milk bread milk cheese butter
+hammer nail screw bolt hammer screw nail bolt hammer bolt screw nail
+table chair desk lamp table desk chair lamp table lamp desk chair
+shirt pants shoes socks shirt shoes pants socks shirt socks shoes pants
+fork knife spoon plate fork spoon knife plate fork plate spoon knife
+window door wall floor window wall door floor window floor wall door
+keyboard mouse monitor screen keyboard monitor mouse screen keyboard screen monitor mouse
+apple orange apple banana orange grape apple banana grape orange banana apple
+the quick brown fox the brown quick fox the fox quick brown the
+hello world hello universe world goodbye hello goodbye universe world hello
+test search test algorithm search pattern test pattern algorithm search test
+data string data array string buffer data buffer array string data
+python java python ruby java javascript python javascript ruby java python
+run jump run walk jump fly run fly walk jump run
+love hate love like hate dislike love dislike like hate love
+buy sell buy trade sell exchange buy exchange trade sell buy
+read write read speak write listen read listen speak write read
+teach learn teach study learn practice teach practice study learn teach
+begin end begin start end finish begin finish start end begin
+rise fall rise climb fall descend rise descend climb fall rise
+grow shrink grow expand shrink contract grow contract expand shrink grow
+light dark light bright dark dim light dim bright dark light
+strong weak strong powerful weak fragile strong fragile powerful weak strong
+young old young new old ancient young ancient new old young
+wet dry wet moist dry arid wet arid moist dry wet
+clean dirty clean pure dirty filthy clean filthy pure dirty clean
+smooth rough smooth soft rough coarse smooth coarse soft rough smooth
+sweet sour sweet bitter sour tart sweet tart bitter sour sweet
