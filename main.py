@@ -129,17 +129,7 @@ right_frame.pack(fill='both', expand=True, padx=12, pady=12)
 controls_card = ttk.Frame(right_frame, style='Card.TFrame', padding=10)
 controls_card.pack(fill='x', pady=(0,8))
 
-# first row: load sample / connect / clear
-top_row = ttk.Frame(controls_card, style='Card.TFrame')
-top_row.pack(fill='x', pady=(0,8))
-load_btn = ttk.Button(top_row, text='Load Sample Map', command=lambda: globals().get('load_predefined_graph', lambda: None)(), style='Accent.TButton')
-load_btn.pack(side='left')
-connect_button = ttk.Button(top_row, text='Connect Nodes', style='Accent.TButton')
-connect_button.pack(side='left', padx=8)
-clear_btn = ttk.Button(top_row, text='Clear Output', command=lambda: output_box.delete('1.0', tk.END))
-clear_btn.pack(side='right')
-
-# second row: start / end / goal / add building
+# first row: start / end / goal / add building
 sel_row = ttk.Frame(controls_card, style='Card.TFrame')
 sel_row.pack(fill='x', pady=(0,8))
 
@@ -150,22 +140,6 @@ traversal_start.grid(row=0, column=1, padx=6)
 ttk.Label(sel_row, text='End:', style='Small.TLabel').grid(row=0, column=2, sticky='w')
 end_entry = ttk.Combobox(sel_row, width=16, state='readonly')
 end_entry.grid(row=0, column=3, padx=6)
-
-ttk.Label(sel_row, text='Goal:', style='Small.TLabel').grid(row=1, column=0, sticky='w', pady=(6,0))
-traversal_goal = ttk.Entry(sel_row, width=18)
-traversal_goal.grid(row=1, column=1, padx=6, pady=(6,0))
-
-goal_button = ttk.Button(sel_row, text='Set Goal', style='Accent.TButton')
-goal_button.grid(row=1, column=3, padx=6, pady=(6,0))
-
-# small add-node input (resolves missing node_entry reference)
-node_entry = ttk.Entry(sel_row, width=18)
-node_entry.grid(row=2, column=1, pady=(8,0), sticky='w')
-ttk.Button(sel_row, text='Add Building', command=lambda: globals().get('add_node', lambda: None)(), style='Accent.TButton').grid(row=2, column=3, pady=(8,0))
-
-accessible_only_var = tk.BooleanVar()
-accessible_check = ttk.Checkbutton(controls_card, text='Accessible Only', variable=accessible_only_var)
-accessible_check.pack(anchor='w', pady=(0,8))
 
 # algorithm buttons
 algo_row = ttk.Frame(controls_card, style='Card.TFrame')
@@ -277,8 +251,6 @@ def connect_nodes():
     # store edge without drawing ids
     edges.append([start, end, int(distance), int(time_cost), bool(accessible), True, None, None, None])
     output_box.insert(tk.END, f"Edge created: {start} <-> {end} distance={distance} time={time_cost} accessible={accessible}\n")
-
-connect_button.config(command=connect_nodes)
 
 # toggle edges function (right-click)
 def toggle_edge(event):
@@ -522,7 +494,6 @@ def set_goal():
         return
     messagebox.showinfo("Goal Set", f"Goal set to {goal}")
 
-goal_button.config(command=set_goal)
 
 def clear_output():
     output_box.delete("1.0", tk.END)
