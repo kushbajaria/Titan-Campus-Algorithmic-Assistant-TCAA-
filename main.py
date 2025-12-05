@@ -153,7 +153,16 @@ prim_button.pack(side='left', padx=5)
 output_frame = ttk.LabelFrame(navigator_frame, text="Results", padding=10)
 output_frame.pack(fill='both', expand=True)
 
-output_box = tk.Text(output_frame, width=100, height=25, font=mono_font, wrap='word', bg='#ffffff', fg='black')
+output_box = tk.Text(
+    output_frame,
+    width=100,
+    height=25,
+    font=mono_font,
+    wrap='word',
+    bg='black',
+    fg='white',
+    insertbackground='white'  # caret color when focused
+)
 output_scroll = ttk.Scrollbar(output_frame, orient='vertical', command=output_box.yview)
 output_box['yscrollcommand'] = output_scroll.set
 output_box.pack(side='left', fill='both', expand=True)
@@ -550,7 +559,7 @@ def build_study_page():
     avail_entry = ttk.Entry(avail_frame, width=10)
     avail_entry.grid(row=0, column=1)
 
-    output_text = tk.Text(study_frame, height=10, width=70)
+    output_text = tk.Text(study_frame, height=10, width=70, font=mono_font, bg='black', fg='white', insertbackground='white')
     output_text.pack(pady=6, anchor='center')
 
     def run_greedy():
@@ -597,7 +606,7 @@ def build_notes_page():
     # large editable text area for document text or user input
     doc_label = ttk.Label(notes_frame, text="Inputted Text:")
     doc_label.pack(padx=6, pady=(6,0), anchor='center')
-    doc_text = tk.Text(notes_frame, height=22, width=140, wrap='word')
+    doc_text = tk.Text(notes_frame, height=22, width=140, wrap='word', font=mono_font, bg='black', fg='white', insertbackground='white')
     doc_text.pack(padx=6, pady=4)
 
     content = {"text": ""}
@@ -671,7 +680,7 @@ def build_notes_page():
     # results text box (separate from the document input text box)
     res_label = ttk.Label(notes_frame, text="Results:")
     res_label.pack(padx=6, anchor='center')
-    results_text = tk.Text(notes_frame, height=16, width=100, wrap='word')
+    results_text = tk.Text(notes_frame, height=16, width=100, wrap='word', font=mono_font, bg='black', fg='white', insertbackground='white')
     results_text.pack(padx=6, pady=(4,10))
 
     def run_search():
@@ -714,7 +723,7 @@ def build_info_page():
     info_built = True
     for child in info_frame.winfo_children():
         child.destroy()
-    txt = tk.Text(info_frame, wrap='word')
+    txt = tk.Text(info_frame, wrap='word', font=mono_font, bg='black', fg='white', insertbackground='white')
     txt.pack(expand=True, fill='both', padx=10, pady=6)
     info = (
         "Algorithm Info & Complexities (CPSC 335)\n"
