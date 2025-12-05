@@ -197,7 +197,6 @@ def load_csuf_campus():
     for building in buildings:
         nodes[building] = {}
     
-    # Realistic campus connections with distances in meters
     # Format: (building1, building2, distance_meters, time_minutes, accessible)
     campus_edges = [
         ('Pollak Library', 'Titan Student Union', 150, 3, True),
@@ -418,6 +417,7 @@ def run_dfs():
         output_box.insert(tk.END, f"  {i}. {building}\n")
     
     output_box.insert(tk.END, f"\n✓ Visited {len(traversal)} buildings\n")
+    output_box.insert(tk.END, f"✓ Path length (edges traversed): {len(traversal) - 1}\n")
     
     if disconnected:
         output_box.insert(tk.END, f"\n⚠ Warning: {len(disconnected)} buildings not reachable:\n")
