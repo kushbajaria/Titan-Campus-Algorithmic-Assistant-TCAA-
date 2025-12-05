@@ -9,6 +9,17 @@ from algorithms import dijkstra, prim, greedy_scheduler, knapsack
 from algorithms.dijkstra_rebuild_path import rebuild_path as dijkstra_rebuild_path
 from algorithms import naive as naive_mod, rabin_karp as rk_mod, kmp as kmp_mod
 
+# optional document libraries (may be missing in some environments)
+try:
+    import PyPDF2
+except Exception:
+    PyPDF2 = None
+
+try:
+    import docx
+except Exception:
+    docx = None
+
 
 # create gui window
 root = tk.Tk()
@@ -27,9 +38,16 @@ mono_font = tkfont.Font(family='Ayuthaya', size=10)
 style.configure('TButton', padding=6)
 style.configure('TLabel', font=primary_font)
 style.configure('TFrame', background='grey')
+# page background color used by styled cards
+PAGE_BG = '#f7f7f7'
+
+# card/section styles for nicer navigator
+style.configure('Card.TFrame', background=PAGE_BG)
+style.configure('Section.TLabel', font=title_font, background=PAGE_BG)
+style.configure('Small.TLabel', font=primary_font, background=PAGE_BG)
+style.configure('Accent.TButton', font=primary_font)
 # status bar variable (updated by actions)
 page_location_var = tk.StringVar(value='Home')
-PAGE_BG = '#f7f7f7'
 
 # Pages: home, navigator, study, notes, info
 pages = {}
@@ -103,69 +121,78 @@ class _DummyCanvas:
 
 canvas = _DummyCanvas()
 
-# right-side output / controls frame (inside navigator page)
-right_frame = ttk.Frame(navigator_frame)
-right_frame.grid(row=1, column=1, padx=10, sticky='n')
+# Navigator layout: controls/output full-width (no map placeholder)
+right_frame = ttk.Frame(navigator_frame, padding=8)
+right_frame.pack(fill='both', expand=True, padx=12, pady=12)
 
-# top row controls (on right frame)
-control_frame_top = ttk.Frame(right_frame)
-control_frame_top.pack(pady=5, anchor="nw")
+# Controls card (styled) containing selectors, actions, and algorithm buttons
+controls_card = ttk.Frame(right_frame, style='Card.TFrame', padding=10)
+controls_card.pack(fill='x', pady=(0,8))
 
-connect_button = ttk.Button(control_frame_top, text="Connect Nodes")
-connect_button.grid(row=0, column=3, padx=6)
+# first row: load sample / connect / clear
+top_row = ttk.Frame(controls_card, style='Card.TFrame')
+top_row.pack(fill='x', pady=(0,8))
+load_btn = ttk.Button(top_row, text='Load Sample Map', command=lambda: globals().get('load_predefined_graph', lambda: None)(), style='Accent.TButton')
+load_btn.pack(side='left')
+connect_button = ttk.Button(top_row, text='Connect Nodes', style='Accent.TButton')
+connect_button.pack(side='left', padx=8)
+clear_btn = ttk.Button(top_row, text='Clear Output', command=lambda: output_box.delete('1.0', tk.END))
+clear_btn.pack(side='right')
 
-# middle controls: start/end selection
-control_frame_middle = ttk.Frame(right_frame)
-control_frame_middle.pack(pady=5, anchor="nw")
+# second row: start / end / goal / add building
+sel_row = ttk.Frame(controls_card, style='Card.TFrame')
+sel_row.pack(fill='x', pady=(0,8))
 
-ttk.Label(control_frame_middle, text="Start:").grid(row=0, column=0, padx=2, sticky="w")
-traversal_start = ttk.Combobox(control_frame_middle, width=12, state='readonly')
+ttk.Label(sel_row, text='Start:', style='Small.TLabel').grid(row=0, column=0, sticky='w')
+traversal_start = ttk.Combobox(sel_row, width=16, state='readonly')
 traversal_start.grid(row=0, column=1, padx=6)
 
-ttk.Label(control_frame_middle, text="End:").grid(row=0, column=2, padx=2, sticky="w")
-end_entry = ttk.Combobox(control_frame_middle, width=12, state='readonly')
+ttk.Label(sel_row, text='End:', style='Small.TLabel').grid(row=0, column=2, sticky='w')
+end_entry = ttk.Combobox(sel_row, width=16, state='readonly')
 end_entry.grid(row=0, column=3, padx=6)
 
-ttk.Label(control_frame_middle, text="Goal:").grid(row=1, column=0, padx=2, sticky="w")
-traversal_goal = ttk.Entry(control_frame_middle, width=12)
-traversal_goal.grid(row=1, column=1, padx=6)
+ttk.Label(sel_row, text='Goal:', style='Small.TLabel').grid(row=1, column=0, sticky='w', pady=(6,0))
+traversal_goal = ttk.Entry(sel_row, width=18)
+traversal_goal.grid(row=1, column=1, padx=6, pady=(6,0))
 
-goal_button = ttk.Button(control_frame_middle, text="Set Goal")
-goal_button.grid(row=1, column=3, padx=6)
+goal_button = ttk.Button(sel_row, text='Set Goal', style='Accent.TButton')
+goal_button.grid(row=1, column=3, padx=6, pady=(6,0))
+
+# small add-node input (resolves missing node_entry reference)
+node_entry = ttk.Entry(sel_row, width=18)
+node_entry.grid(row=2, column=1, pady=(8,0), sticky='w')
+ttk.Button(sel_row, text='Add Building', command=lambda: globals().get('add_node', lambda: None)(), style='Accent.TButton').grid(row=2, column=3, pady=(8,0))
 
 accessible_only_var = tk.BooleanVar()
-accessible_check = ttk.Checkbutton(right_frame, text="Accessible Only", variable=accessible_only_var)
-accessible_check.pack(pady=5, anchor="nw")
+accessible_check = ttk.Checkbutton(controls_card, text='Accessible Only', variable=accessible_only_var)
+accessible_check.pack(anchor='w', pady=(0,8))
 
-# bottom row buttons for algorithms
-control_frame_bottom = ttk.Frame(right_frame)
-control_frame_bottom.pack(pady=8, anchor="nw")
+# algorithm buttons
+algo_row = ttk.Frame(controls_card, style='Card.TFrame')
+algo_row.pack(fill='x', pady=(0,8))
+bfs_button = ttk.Button(algo_row, text='Run BFS', style='Accent.TButton')
+bfs_button.pack(side='left', padx=6)
+dfs_button = ttk.Button(algo_row, text='Run DFS', style='Accent.TButton')
+dfs_button.pack(side='left', padx=6)
+dijkstra_button = ttk.Button(algo_row, text='Run Dijkstra', style='Accent.TButton')
+dijkstra_button.pack(side='left', padx=6)
+prim_button = ttk.Button(algo_row, text="Run Prim's MST", style='Accent.TButton')
+prim_button.pack(side='left', padx=6)
+randomize_button = ttk.Button(algo_row, text='Randomize Weights', style='Accent.TButton')
+randomize_button.pack(side='left', padx=6)
 
-bfs_button = ttk.Button(control_frame_bottom, text="Run BFS")
-bfs_button.grid(row=0, column=0, padx=6, pady=4)
-
-dfs_button = ttk.Button(control_frame_bottom, text="Run DFS")
-dfs_button.grid(row=0, column=1, padx=6, pady=4)
-
-dijkstra_button = ttk.Button(control_frame_bottom, text="Run Dijkstra")
-dijkstra_button.grid(row=0, column=2, padx=6, pady=4)
-
-prim_button = ttk.Button(control_frame_bottom, text="Run Prim's MST")
-prim_button.grid(row=0, column=3, padx=6, pady=4)
-
-randomize_button = ttk.Button(control_frame_bottom, text="Randomize Weights")
-randomize_button.grid(row=0, column=4, padx=6, pady=4)
-
-# info / output box
-output_label = ttk.Label(right_frame, text="Output")
-output_label.pack(anchor="nw")
+# info / output label and scrollable text area (fills remaining space)
+output_label = ttk.Label(right_frame, text='Output', style='Section.TLabel')
+output_label.pack(anchor='nw', pady=(6,0))
 output_frame = ttk.Frame(right_frame)
-output_frame.pack(pady=5, anchor="nw")
-output_box = tk.Text(output_frame, width=40, height=18, font=mono_font, wrap='word')
+output_frame.pack(fill='both', expand=True, pady=(4,0))
+output_box = tk.Text(output_frame, width=80, height=18, font=mono_font, wrap='word', bg='#ffffff')
 output_scroll = ttk.Scrollbar(output_frame, orient='vertical', command=output_box.yview)
 output_box['yscrollcommand'] = output_scroll.set
-output_box.grid(row=0, column=0)
+output_box.grid(row=0, column=0, sticky='nsew')
 output_scroll.grid(row=0, column=1, sticky='ns')
+output_frame.grid_rowconfigure(0, weight=1)
+output_frame.grid_columnconfigure(0, weight=1)
 
 # dictionary/list to store nodes/edges (no canvas coordinates used)
 nodes = {}
