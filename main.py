@@ -161,7 +161,7 @@ output_box = tk.Text(
     wrap='word',
     bg='black',
     fg='white',
-    insertbackground='white'  # caret color when focused
+    insertbackground='white'
 )
 output_scroll = ttk.Scrollbar(output_frame, orient='vertical', command=output_box.yview)
 output_box['yscrollcommand'] = output_scroll.set
@@ -176,11 +176,11 @@ nodes = {}
 edges = []
 
 def load_csuf_campus():
-    """Load realistic CSUF campus buildings and connections"""
+    """Load 'realistic' CSUF campus buildings and connections"""
     nodes.clear()
     edges.clear()
     
-    # CSUF Buildings (realistic campus locations)
+    # CSUF Buildings
     buildings = [
         'Pollak Library',
         'Titan Student Union',
@@ -197,7 +197,7 @@ def load_csuf_campus():
     for building in buildings:
         nodes[building] = {}
     
-    # Format: (building1, building2, distance_meters, time_minutes, accessible)
+    # Format: (building1, building2, distance in meters, time in minutes, accessible: T or F)
     campus_edges = [
         ('Pollak Library', 'Titan Student Union', 150, 3, True),
         ('Pollak Library', 'McCarthy Hall', 200, 4, True),
@@ -234,8 +234,7 @@ def build_graph():
     graph = {node: [] for node in nodes}
     for edge in edges:
         start, end, distance, time_cost, accessible, is_open = edge[:6]
-        if is_open:  # Only include open edges
-            # Undirected graph - add both directions
+        if is_open:
             graph[start].append((end, distance))
             graph[end].append((start, distance))
     return graph
@@ -337,7 +336,7 @@ def prim_mst(start):
     visited = set([start])
     edges_heap = []
     
-    # Add all edges from start node
+    # Add all edges from the start node
     for neighbor, weight in graph.get(start, []):
         heapq.heappush(edges_heap, (weight, start, neighbor))
     
@@ -354,7 +353,7 @@ def prim_mst(start):
         mst_edges.append((u, v, weight))
         total_cost += weight
         
-        # Add all edges from newly visited node
+        # Add all edges from the newly visited node
         for neighbor, edge_weight in graph.get(v, []):
             if neighbor not in visited:
                 heapq.heappush(edges_heap, (edge_weight, v, neighbor))
@@ -377,9 +376,9 @@ def run_bfs():
     
     path, visited = bfs(start, goal)
     
-    output_box.insert(tk.END, '\n' + '=' * 70 + '\n')
+    output_box.insert(tk.END, '\n' + '=' * 60 + '\n')
     output_box.insert(tk.END, 'BFS RESULT (Fewest Hops)\n')
-    output_box.insert(tk.END, '=' * 70 + '\n')
+    output_box.insert(tk.END, '=' * 60 + '\n')
     
     if not path:
         output_box.insert(tk.END, f"❌ No path found from '{start}' to '{goal}'\n")
@@ -389,9 +388,9 @@ def run_bfs():
         output_box.insert(tk.END, f"Path (fewest hops):\n")
         for i, building in enumerate(path, 1):
             output_box.insert(tk.END, f"  {i}. {building}\n")
-        output_box.insert(tk.END, f"\n✓ Number of hops: {len(path) - 1}\n")
+        output_box.insert(tk.END, f"\n✔ Number of hops: {len(path) - 1}\n")
     
-    output_box.insert(tk.END, f"\nTraversal order: {' → '.join(visited)}\n")
+    output_box.insert(tk.END, f"\nTraversal order: {' -> '.join(visited)}\n")
     output_box.see(tk.END)
 
 def run_dfs():
@@ -408,16 +407,16 @@ def run_dfs():
     
     traversal, disconnected = dfs(start)
     
-    output_box.insert(tk.END, '\n' + '=' * 70 + '\n')
+    output_box.insert(tk.END, '\n' + '=' * 60 + '\n')
     output_box.insert(tk.END, 'DFS RESULT (Depth-First Traversal)\n')
-    output_box.insert(tk.END, '=' * 70 + '\n')
+    output_box.insert(tk.END, '=' * 60 + '\n')
     output_box.insert(tk.END, f"Starting from: {start}\n\n")
     output_box.insert(tk.END, f"Traversal order:\n")
     for i, building in enumerate(traversal, 1):
         output_box.insert(tk.END, f"  {i}. {building}\n")
     
-    output_box.insert(tk.END, f"\n✓ {len(traversal)} buildings\n")
-    output_box.insert(tk.END, f"✓ Path length (edges traversed): {len(traversal) - 1}\n")
+    output_box.insert(tk.END, f"\n✔ {len(traversal)} buildings\n")
+    output_box.insert(tk.END, f"✔ Path length (edges traversed): {len(traversal) - 1}\n")
     
     if disconnected:
         output_box.insert(tk.END, f"\n⚠ Warning: {len(disconnected)} buildings not reachable:\n")
@@ -440,9 +439,9 @@ def run_dijkstra():
     
     path, distance = dijkstra(start, goal)
     
-    output_box.insert(tk.END, '\n' + '=' * 70 + '\n')
+    output_box.insert(tk.END, '\n' + '=' * 60 + '\n')
     output_box.insert(tk.END, 'DIJKSTRA RESULT (Shortest Path)\n')
-    output_box.insert(tk.END, '=' * 70 + '\n')
+    output_box.insert(tk.END, '=' * 60 + '\n')
     
     if not path:
         output_box.insert(tk.END, f"❌ No path found from '{start}' to '{goal}'\n")
@@ -452,8 +451,8 @@ def run_dijkstra():
         output_box.insert(tk.END, f"Shortest path:\n")
         for i, building in enumerate(path, 1):
             output_box.insert(tk.END, f"  {i}. {building}\n")
-        output_box.insert(tk.END, f"\n✓ Total distance: {distance} meters\n")
-        output_box.insert(tk.END, f"✓ Estimated walk time: {distance // 50} minutes\n")
+        output_box.insert(tk.END, f"\n✔ Total distance: {distance} meters\n")
+        output_box.insert(tk.END, f"✔ Estimated walk time: {distance // 50} minutes\n")
     
     output_box.see(tk.END)
 
@@ -471,9 +470,9 @@ def run_prim():
     
     mst_edges, total_cost, disconnected = prim_mst(start)
     
-    output_box.insert(tk.END, '\n' + '=' * 70 + '\n')
+    output_box.insert(tk.END, '\n' + '=' * 60 + '\n')
     output_box.insert(tk.END, "PRIM'S MST RESULT (Minimum Spanning Tree)\n")
-    output_box.insert(tk.END, '=' * 70 + '\n')
+    output_box.insert(tk.END, '=' * 60 + '\n')
     output_box.insert(tk.END, f"Starting from: {start}\n\n")
     
     if disconnected:
@@ -483,9 +482,9 @@ def run_prim():
     for i, (u, v, weight) in enumerate(mst_edges, 1):
         output_box.insert(tk.END, f"  {i}. {u} ↔ {v} (weight: {weight}m)\n")
     
-    output_box.insert(tk.END, f"\n✓ Total edges: {len(mst_edges)}\n")
-    output_box.insert(tk.END, f"✓ Total MST cost: {total_cost} meters\n")
-    output_box.insert(tk.END, f"✓ Buildings connected: {len(mst_edges) + 1}\n")
+    output_box.insert(tk.END, f"\n✔ Total edges: {len(mst_edges)}\n")
+    output_box.insert(tk.END, f"✔ Total MST cost: {total_cost} meters\n")
+    output_box.insert(tk.END, f"✔ Buildings connected: {len(mst_edges) + 1}\n")
     
     output_box.see(tk.END)
 
@@ -608,7 +607,7 @@ def build_notes_page():
 
     content = {"text": ""}
 
-    # Load file through OS
+    # load file through OS
     def load_file():
         fname = filedialog.askopenfilename(filetypes=[("All", "*.*"), ("PDF", "*.pdf"), ("DOCX", "*.docx"), ("Text", "*.txt")])
         if not fname:
@@ -648,7 +647,7 @@ def build_notes_page():
                 return
 
         content['text'] = text
-        # if user hasn't typed anything into the doc_text box, paste loaded text there
+        # if user hasn't typed anything into the doc text box, paste loaded text there
         cur = doc_text.get('1.0', 'end').strip()
         if not cur:
             doc_text.delete('1.0', 'end')
@@ -674,7 +673,7 @@ def build_notes_page():
     run_btn = ttk.Button(notes_frame, text="Run Search")
     run_btn.pack(pady=6, padx=6, anchor='center')
 
-    # results text box (separate from the document input text box)
+    # results text box
     res_label = ttk.Label(notes_frame, text="Results:")
     res_label.pack(padx=6, anchor='center')
     results_text = tk.Text(notes_frame, height=16, width=100, wrap='word', font=mono_font, bg='black', fg='white', insertbackground='white')
