@@ -200,7 +200,7 @@ def load_csuf_campus():
     # Format: (building1, building2, distance in meters, time in minutes, accessible: T or F)
     campus_edges = [
         ('Pollak Library', 'Titan Student Union', 483, 7, True),
-        ('Pollak Library', 'McCarthy Hall', 322, 5, True),
+        ('Pollak Library', 'McCarthy Hall', 300, 4, True),
         ('Titan Student Union', 'McCarthy Hall', 322, 5, True),
         ('Titan Student Union', 'Dan Black Hall', 310, 4, True),
         ('McCarthy Hall', 'Engineering & Computer Science', 483, 6, True),
@@ -390,7 +390,7 @@ def run_bfs():
             output_box.insert(tk.END, f"  {i}. {building}\n")
         output_box.insert(tk.END, f"\n✔ Number of hops: {len(path) - 1}\n")
     
-    output_box.insert(tk.END, f"\nTraversal order: {' -> '.join(visited)}\n")
+    output_box.insert(tk.END, f"\nTraversal order: {' ➜ '.join(visited)}\n")
     output_box.see(tk.END)
 
 def run_dfs():
@@ -741,7 +741,7 @@ def build_info_page():
         "\nSolutions:\n"
         "- Dijkstra Shortest Path Algorithm\n"
         "- Prim's Algorithms (Minimum Spanning Tree)\n"
-        "--> Both Algorithms are in Polynomial Time (P). "
+        "➜ Both Algorithms are in Polynomial Time (P). "
     )
     txt.insert('1.0', info)
     # make the info textbox read-only so users can select/copy but not edit
