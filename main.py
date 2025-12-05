@@ -722,26 +722,46 @@ def build_info_page():
     txt = tk.Text(info_frame, wrap='word', font=mono_font, bg='black', fg='white', insertbackground='white')
     txt.pack(expand=True, fill='both', padx=10, pady=6)
     info = (
-        "Algorithm Info & Complexities (CPSC 335)\n"
-        "\nGraph Algorithms:\n"
-        "- BFS: O(V + E)\n"
-        "- DFS: O(V + E)\n"
-        "- Dijkstra (binary heap): O((V + E) log V)\n"
-        "- Prim's MST (binary heap): O((V + E) log V)\n"
-        "\nStudy Planner:\n"
-        "- Greedy Scheduler: O(n log n)\n"
-        "- DP 0/1 Knapsack: O(n * C) where C = capacity in time units\n"
-        "\nNotes Search:\n"
-        "- Naive: Worst Case: O(m * n), Average Case: O(n + m) or O(n), Best Case: O(n)\n"
-        "- Rabin-Karp: Worst Case: O(n * m), Average Case: O(n + m), Best Case: O(n + m)\n"
-        "- KMP: Worst Case: O(n + m)\n"
-        "\nP vs NP Reflection\n"
-        "- P: Problems that can be solved in polynomial time.\n"
-        "- NP: Solutions that can be checked in polynomial time.\n"
-        "\nSolutions:\n"
-        "- Dijkstra Shortest Path Algorithm\n"
-        "- Prim's Algorithms (Minimum Spanning Tree)\n"
-        "➜ Both Algorithms are in Polynomial Time (P). "
+        '=' * 185 + '\n' +
+        "Algorithm Info & Complexities (CPSC 335)\n" +
+        '=' * 185 + '\n\n' +
+        '-' * 185 + '\n' +
+        "Graph Algorithms:\n" +
+        "- BFS: O(V + E)\n" +
+        "- DFS: O(V + E)\n" +
+        "- Dijkstra (binary heap): O((V + E) log V)\n" +
+        "- Prim's MST (binary heap): O((V + E) log V)\n" +
+        '-' * 185 + '\n\n' +
+        '-' * 185 + '\n' +
+        "Study Planner:\n" +
+        "- Greedy Scheduler: O(n log n)\n" +
+        "- DP 0/1 Knapsack: O(n * C) where C = capacity in time units\n" +
+        '-' * 185 + '\n\n' +
+        '-' * 185 + '\n' +
+        "Notes Search:\n" +
+        "- Naive: Worst Case: O(m * n), Average Case: O(n + m) or O(n), Best Case: O(n)\n" +
+        "- Rabin-Karp: Worst Case: O(n * m), Average Case: O(n + m), Best Case: O(n + m)\n" +
+        "- KMP: Worst Case: O(n + m)\n" +
+        '-' * 185 + '\n\n' +
+        '-' * 185 + '\n' +
+        "P vs NP Reflection\n" +
+        "- P: Problems that can be solved in polynomial time.\n" +
+        "- NP: Solutions that can be checked in polynomial time.\n" +
+        "- NP Hard: At least as hard as the hardest NP problem.\n" +
+        "- NP Complete: Both NP and NP hard (more realistic to current industry problems).\n" +
+        '-' * 185 + '\n\n' +
+        '-' * 185 + '\n' +
+        "Solutions:\n" +
+        "- Dijkstra Shortest Path Algorithm\n" +
+        "- Prim's Algorithms (Minimum Spanning Tree)\n" +
+        "➜ Both Algorithms are in Polynomial Time (P).\n" +
+        '-' * 185 + '\n\n' +
+        '-' * 185 + '\n' +
+        "Importance\n" +
+        "Solving P vs NP would either unlock fast solutions to the world's hardest problems or confirm that some tasks will always remain computationally difficult.\n" +
+        "➜ If P = NP, many currently hard problems in optimization, AI, and logistics could be solved efficiently, unlocking huge technological and scientific breakthroughs.\n" +
+        "➜ However, if P ≠ NP, it confirms that some problems are inherently hard to solve, ensuring security for encryption and setting realistic limits on computational problem-solving.\n" +
+        '-' * 185 + '\n'
     )
     txt.insert('1.0', info)
     # make the info textbox read-only so users can select/copy but not edit
